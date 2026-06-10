@@ -40,11 +40,27 @@ const PK = {
   section_images: 'id',
 };
 
-const INCLUDE_JOIN = {
-  product_images: { parentKey: 'product_id', childKey: 'productId' },
-  product_videos: { parentKey: 'product_id', childKey: 'productId' },
-  orders: { parentKey: 'customer_id', childKey: 'customerId' },
+// Relations: currentModel.relName → { joinTable, currentCol (FK in current table), joinCol (PK in joined table), isMany }
+const INCLUDE_MAP = {
+  'product.images': { table: 'product_images', currentCol: 'id', joinCol: 'product_id', isMany: true },
+  'product.videos': { table: 'product_videos', currentCol: 'id', joinCol: 'product_id', isMany: true },
+  'order.customer': { table: 'customers', currentCol: 'customer_id', joinCol: 'customer_id' },
+  'order.items': { table: 'order_items', currentCol: 'order_id', joinCol: 'order_id', isMany: true },
+  'heroMedia.media': { table: 'media_library', currentCol: 'media_id', joinCol: 'id' },
+  'sectionImage.media': { table: 'media_library', currentCol: 'media_id', joinCol: 'id' },
 };
+
+function camel(str) {
+  return str.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+}
+
+function camelKeys(row) {
+  if (!row || typeof row !== 'object') return row;
+  if (Array.isArray(row)) return row.map(camelKeys);
+  const out = {};
+  for (const k of Object.keys(row)) out[camel(k)] = row[k];
+  return out;
+}
 
 function col(key) {
   return key.replace(/[A-Z]/g, c => '_' + c.toLowerCase());
@@ -54,6 +70,11 @@ function cols(obj) {
   const out = {};
   for (const k of Object.keys(obj)) out[col(k)] = obj[k];
   return out;
+}
+
+async function query(sql, params) {
+  const rows = await db.query(sql, params);
+  return camelKeys(rows);
 }
 
 function expandWhere(where) {
@@ -74,7 +95,9 @@ function expandWhere(where) {
           else { clauses.push(`${col(key)} != ?`); params.push(v); }
           break;
         case 'contains': clauses.push(`${col(key)} LIKE ?`); params.push(`%${v}%`); break;
-        case 'in': clauses.push(`${col(key)} IN (${v.map(() => '?').join(',')})`); params.push(...v); break;
+        case 'in':
+          if (v && v.length) { clauses.push(`${col(key)} IN (${v.map(() => '?').join(',')})`); params.push(...v); }
+          break;
       }
     } else if (val === null) {
       clauses.push(`${col(key)} IS NULL`);
@@ -88,85 +111,61 @@ function expandWhere(where) {
 
 function expandOrderBy(orderBy) {
   if (!orderBy) return '';
-  if (typeof orderBy === 'string') return `ORDER BY ${col(orderBy)} ASC`;
+  if (typeof orderBy === 'string') return 'ORDER BY ' + col(orderBy) + ' ASC';
   const entries = Object.entries(orderBy);
   return 'ORDER BY ' + entries.map(([k, v]) => `${col(k)} ${String(v).toUpperCase()}`).join(', ');
 }
 
+async function attachIncludes(model, row, include) {
+  if (!include) return row;
+  for (const [rel, val] of Object.entries(include)) {
+    if (!val) continue;
+    const key = `${model}.${rel}`;
+    const cfg = INCLUDE_MAP[key];
+    if (!cfg) continue;
+    const fkValue = row[camel(cfg.currentCol)] ?? row[cfg.currentCol];
+    if (fkValue == null) { row[rel] = cfg.isMany ? [] : null; continue; }
+    if (cfg.isMany) {
+      row[rel] = await query(`SELECT * FROM \`${cfg.table}\` WHERE \`${cfg.joinCol}\` = ? ORDER BY \`display_order\` ASC`, [fkValue]);
+    } else {
+      const related = await query(`SELECT * FROM \`${cfg.table}\` WHERE \`${cfg.joinCol}\` = ? LIMIT 1`, [fkValue]);
+      row[rel] = related[0] || null;
+    }
+  }
+  return row;
+}
+
 async function findUnique(model, args) {
   const table = TABLE[model];
-  if (!table) throw new Error(`Unknown model: ${model}`);
-  const w = expandWhere(args.where);
-  const sql = `SELECT * FROM \`${table}\` WHERE ${w.sql} LIMIT 1`;
-  const rows = await db.query(sql, w.params);
+  if (!table) return null;
+  const w = expandWhere(args?.where);
+  const rows = await query(`SELECT * FROM \`${table}\` WHERE ${w.sql} LIMIT 1`, w.params);
   const row = rows[0] || null;
-  if (row && args.include) return attachIncludes(model, row, args.include);
-  return row;
+  return row && args?.include ? attachIncludes(model, row, args.include) : row;
 }
 
 async function findFirst(model, args) {
   const table = TABLE[model];
-  if (!table) throw new Error(`Unknown model: ${model}`);
+  if (!table) return null;
   const w = expandWhere(args?.where);
   const ob = args?.orderBy ? expandOrderBy(args.orderBy) : '';
-  const sql = `SELECT * FROM \`${table}\` ${w.sql ? 'WHERE ' + w.sql : ''} ${ob} LIMIT 1`;
-  const rows = await db.query(sql, w.params);
+  const rows = await query(`SELECT * FROM \`${table}\` ${w.sql ? 'WHERE ' + w.sql : ''} ${ob} LIMIT 1`, w.params);
   const row = rows[0] || null;
-  if (row && args?.include) return attachIncludes(model, row, args.include);
-  return row;
+  return row && args?.include ? attachIncludes(model, row, args.include) : row;
 }
 
 async function findMany(model, args) {
   const table = TABLE[model];
-  if (!table) throw new Error(`Unknown model: ${model}`);
+  if (!table) return [];
   const w = expandWhere(args?.where);
   const ob = args?.orderBy ? expandOrderBy(args.orderBy) : '';
-  let limit = '';
-  let offset = '';
-  if (args?.take) limit = `LIMIT ${Number(args.take)}`;
-  if (args?.skip) offset = `OFFSET ${Number(args.skip)}`;
-  let sql = `SELECT * FROM \`${table}\` ${w.sql ? 'WHERE ' + w.sql : ''} ${ob} ${limit} ${offset}`;
-  let rows = await db.query(sql, w.params);
+  const limit = args?.take ? `LIMIT ${Number(args.take)}` : '';
+  const offset = args?.skip ? `OFFSET ${Number(args.skip)}` : '';
+  let rows = await query(`SELECT * FROM \`${table}\` ${w.sql ? 'WHERE ' + w.sql : ''} ${ob} ${limit} ${offset}`, w.params);
   if (rows && args?.include) {
     rows = await Promise.all(rows.map(r => attachIncludes(model, r, args.include)));
   }
   return rows;
-}
-
-async function attachIncludes(model, row, include) {
-  row = { ...row };
-  for (const [rel, val] of Object.entries(include)) {
-    if (!val) continue;
-    let joinTable, parentKey, childKey;
-    if (rel === 'images' && model === 'product') {
-      joinTable = 'product_images'; parentKey = 'id'; childKey = 'product_id';
-    } else if (rel === 'videos' && model === 'product') {
-      joinTable = 'product_videos'; parentKey = 'id'; childKey = 'product_id';
-    } else if (rel === 'product' && (model === 'orderItem' || model === 'order')) {
-      joinTable = 'products'; parentKey = 'product_id'; childKey = 'id';
-    } else if (rel === 'customer' && model === 'order') {
-      joinTable = 'customers'; parentKey = 'customer_id'; childKey = 'customer_id';
-    } else if (rel === 'media' && (model === 'heroMedia' || model === 'sectionImage')) {
-      joinTable = 'media_library'; parentKey = 'media_id'; childKey = 'id';
-    } else if (rel === 'order' && model === 'orderStatusHistory') {
-      joinTable = 'orders'; parentKey = 'order_id'; childKey = 'order_id';
-    } else {
-      continue;
-    }
-    const pk = PK[joinTable] || 'id';
-    const fk = typeof parentKey === 'number' ? parentKey : parentKey;
-    const id = row[childKey] || row[parentKey === 'id' ? 'id' : childKey];
-    if (!id) { row[rel] = null; continue; }
-
-    if (rel === 'images' || rel === 'videos') {
-      const childRows = await db.query(`SELECT * FROM \`${joinTable}\` WHERE ${fk} = ? ORDER BY display_order ASC`, [id]);
-      row[rel] = childRows;
-    } else {
-      const childRows = await db.query(`SELECT * FROM \`${joinTable}\` WHERE ${pk} = ? LIMIT 1`, [id]);
-      row[rel] = childRows[0] || null;
-    }
-  }
-  return row;
 }
 
 async function create(model, args) {
@@ -176,13 +175,15 @@ async function create(model, args) {
   const keys = Object.keys(data);
   const vals = Object.values(data);
   const placeholders = keys.map(() => '?').join(',');
-  const sql = `INSERT INTO \`${table}\` (${keys.map(k => '`' + k + '`').join(',')}) VALUES (${placeholders})`;
-  const result = await db.query(sql, vals);
+  const result = await db.query(
+    `INSERT INTO \`${table}\` (${keys.map(k => '`' + k + '`').join(',')}) VALUES (${placeholders})`,
+    vals
+  );
   const pk = PK[table] || 'id';
-  const inserted = await db.query(`SELECT * FROM \`${table}\` WHERE \`${pk}\` = ? LIMIT 1`, [result.insertId]);
-  let row = inserted[0] || { ...data, [pk]: result.insertId };
-  if (row && args.include) row = await attachIncludes(model, row, args.include);
-  return row;
+  const inserted = await query(`SELECT * FROM \`${table}\` WHERE \`${pk}\` = ? LIMIT 1`, [result.insertId]);
+  let row = inserted[0];
+  if (!row) row = camelKeys(data);
+  return row && args?.include ? attachIncludes(model, row, args.include) : row;
 }
 
 async function update(model, args) {
@@ -191,14 +192,13 @@ async function update(model, args) {
   const data = cols(args.data);
   const w = expandWhere(args.where);
   const setClause = Object.keys(data).map(k => `\`${k}\` = ?`).join(',');
-  const sql = `UPDATE \`${table}\` SET ${setClause} WHERE ${w.sql}`;
-  const params = [...Object.values(data), ...w.params];
-  await db.query(sql, params);
-  const selectSql = `SELECT * FROM \`${table}\` WHERE ${w.sql} LIMIT 1`;
-  const rows = await db.query(selectSql, w.params);
-  let row = rows[0] || null;
-  if (row && args.include) row = await attachIncludes(model, row, args.include);
-  return row;
+  await db.query(
+    `UPDATE \`${table}\` SET ${setClause} WHERE ${w.sql}`,
+    [...Object.values(data), ...w.params]
+  );
+  const rows = await query(`SELECT * FROM \`${table}\` WHERE ${w.sql} LIMIT 1`, w.params);
+  const row = rows[0] || null;
+  return row && args?.include ? attachIncludes(model, row, args.include) : row;
 }
 
 async function updateMany(model, args) {
@@ -207,9 +207,10 @@ async function updateMany(model, args) {
   const data = cols(args.data);
   const w = expandWhere(args.where);
   const setClause = Object.keys(data).map(k => `\`${k}\` = ?`).join(',');
-  const sql = `UPDATE \`${table}\` SET ${setClause} WHERE ${w.sql}`;
-  const params = [...Object.values(data), ...w.params];
-  const result = await db.query(sql, params);
+  const result = await db.query(
+    `UPDATE \`${table}\` SET ${setClause} WHERE ${w.sql}`,
+    [...Object.values(data), ...w.params]
+  );
   return { count: result.affectedRows };
 }
 
@@ -217,14 +218,11 @@ async function del(model, args) {
   const table = TABLE[model];
   if (!table) throw new Error(`Unknown model: ${model}`);
   const w = expandWhere(args.where);
-  const sql = `DELETE FROM \`${table}\` WHERE ${w.sql}`;
-  const result = await db.query(sql, w.params);
+  const result = await db.query(`DELETE FROM \`${table}\` WHERE ${w.sql}`, w.params);
   return { count: result.affectedRows };
 }
 
-async function deleteMany(model, args) {
-  return del(model, args);
-}
+const deleteMany = del;
 
 async function upsert(model, args) {
   const table = TABLE[model];
@@ -238,23 +236,27 @@ async function upsert(model, args) {
 
 async function count(model, args) {
   const table = TABLE[model];
-  if (!table) throw new Error(`Unknown model: ${model}`);
+  if (!table) return 0;
   const w = expandWhere(args?.where);
-  const sql = `SELECT COUNT(*) AS \`count\` FROM \`${table}\` ${w.sql ? 'WHERE ' + w.sql : ''}`;
-  const rows = await db.query(sql, w.params);
-  return Number(rows[0].count);
+  const rows = await db.query(
+    `SELECT COUNT(*) AS \`count\` FROM \`${table}\` ${w.sql ? 'WHERE ' + w.sql : ''}`,
+    w.params
+  );
+  return Number(rows[0]?.count ?? 0);
 }
 
 async function aggregate(model, args) {
   const table = TABLE[model];
   if (!table) throw new Error(`Unknown model: ${model}`);
-  const w = expandWhere(args.where);
-  const agg = args._max || args._sum || {};
+  const w = expandWhere(args?.where);
+  const aggTarget = args._max || args._sum || {};
   const op = args._max ? 'MAX' : 'SUM';
-  const target = args._max || args._sum;
-  const field = Object.keys(target)[0];
-  const sql = `SELECT ${op}(\`${col(field)}\`) AS \`value\` FROM \`${table}\` ${w.sql ? 'WHERE ' + w.sql : ''}`;
-  const rows = await db.query(sql, w.params);
+  const field = Object.keys(aggTarget)[0];
+  if (!field) return { _max: {}, _sum: {} };
+  const rows = await db.query(
+    `SELECT ${op}(\`${col(field)}\`) AS \`value\` FROM \`${table}\` ${w.sql ? 'WHERE ' + w.sql : ''}`,
+    w.params
+  );
   const result = { _max: {}, _sum: {} };
   if (args._max) result._max[field] = rows[0]?.value ?? null;
   if (args._sum) result._sum[field] = rows[0]?.value ?? null;
@@ -266,8 +268,9 @@ async function groupBy(model, args) {
   if (!table) throw new Error(`Unknown model: ${model}`);
   const byFields = args.by || [];
   const selectCols = byFields.map(f => `\`${col(f)}\``).join(', ');
-  const sql = `SELECT ${selectCols}, COUNT(*) AS \`_count\` FROM \`${table}\` GROUP BY ${selectCols}`;
-  const rows = await db.query(sql);
+  const rows = await db.query(
+    `SELECT ${selectCols}, COUNT(*) AS \`_count\` FROM \`${table}\` GROUP BY ${selectCols}`
+  );
   return rows.map(r => ({ ...r, _count: Number(r._count) }));
 }
 
