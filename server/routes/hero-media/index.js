@@ -1,5 +1,4 @@
 const prisma = require('../../lib/prisma');
-const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs/promises');
 
@@ -78,23 +77,13 @@ async function postHandler(req, res) {
     let fileName, fileUrl, fileSize, width = 0, height = 0, mimeType = file.mimetype;
     const sanitized = file.originalFilename?.replace(/[^a-zA-Z0-9._-]/g, '_').toLowerCase() || 'file';
 
-    if (mediaType === 'image') {
-      const ext = 'webp';
-      fileName = `${Date.now()}-${path.parse(sanitized).name}.${ext}`;
-      const metadata = await sharp(buffer).metadata();
-      width = metadata.width || 0;
-      height = metadata.height || 0;
-      const webpBuffer = await sharp(buffer).webp({ quality: 82 }).toBuffer();
-      fileSize = webpBuffer.length;
-      mimeType = 'image/webp';
-      await fs.writeFile(path.join(UPLOAD_BASE, fileName), webpBuffer);
-      fileUrl = `/uploads/hero/${fileName}`;
-    } else {
-      fileName = `${Date.now()}-${sanitized}`;
-      fileUrl = `/uploads/hero/${fileName}`;
-      fileSize = buffer.length;
-      await fs.writeFile(path.join(UPLOAD_BASE, fileName), buffer);
-    }
+    const ext = path.extname(sanitized) || (mediaType === 'image' ? '.webp' : '.mp4');
+    const baseName = path.parse(sanitized).name;
+    fileName = `${Date.now()}-${baseName}${ext}`;
+    fileUrl = `/uploads/hero/${fileName}`;
+    fileSize = buffer.length;
+    mimeType = file.mimetype;
+    await fs.writeFile(path.join(UPLOAD_BASE, fileName), buffer);
 
     await fs.unlink(file.filepath).catch(() => {});
 

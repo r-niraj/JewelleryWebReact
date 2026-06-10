@@ -1,5 +1,4 @@
 const prisma = require('../../lib/prisma');
-const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs/promises');
 
@@ -65,16 +64,14 @@ async function postHandler(req, res) {
     const altText = fields.altText?.[0] || fields.altText || '';
 
     const buffer = await fs.readFile(file.filepath);
-    const metadata = await sharp(buffer).metadata();
-    const ext = 'webp';
+    const ext = path.extname(file.originalFilename || '.jpg');
     const sanitized = sanitizeName(path.parse(file.originalFilename || 'file').name);
-    const fileName = `${Date.now()}-${sanitized}.${ext}`;
+    const fileName = `${Date.now()}-${sanitized}${ext}`;
     const sectionDir = path.join(UPLOAD_BASE, sectionName);
     await fs.mkdir(sectionDir, { recursive: true });
 
-    const webpBuffer = await sharp(buffer).webp({ quality: 80 }).toBuffer();
     const filePath = path.join(sectionDir, fileName);
-    await fs.writeFile(filePath, webpBuffer);
+    await fs.writeFile(filePath, buffer);
 
     await fs.unlink(file.filepath).catch(() => {});
 
@@ -90,10 +87,10 @@ async function postHandler(req, res) {
         fileName,
         originalName: file.originalFilename || fileName,
         fileUrl,
-        fileSize: webpBuffer.length,
-        mimeType: 'image/webp',
-        width: metadata.width || 0,
-        height: metadata.height || 0,
+        fileSize: buffer.length,
+        mimeType: file.mimetype,
+        width: 0,
+        height: 0,
         altText,
         sectionName,
         displayOrder: (maxOrder._max.displayOrder ?? -1) + 1,
