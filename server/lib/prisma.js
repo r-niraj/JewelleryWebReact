@@ -72,9 +72,16 @@ function cols(obj) {
   return out;
 }
 
-async function query(sql, params) {
-  const rows = await db.query(sql, params);
-  return camelKeys(rows);
+async function exec(sql, params, conn) {
+  if (conn) {
+    const [result] = await conn.execute(sql, params);
+    return result;
+  }
+  return db.query(sql, params);
+}
+
+async function query(sql, params, conn) {
+  return camelKeys(await exec(sql, params, conn));
 }
 
 function expandWhere(where) {
@@ -109,6 +116,8 @@ function expandWhere(where) {
           else { clauses.push(`${col(key)} != ?`); params.push(v); }
           break;
         case 'contains': clauses.push(`${col(key)} LIKE ?`); params.push(`%${v}%`); break;
+        case 'startsWith': clauses.push(`${col(key)} LIKE ?`); params.push(`${v}%`); break;
+        case 'endsWith': clauses.push(`${col(key)} LIKE ?`); params.push(`%${v}`); break;
         case 'in':
           if (v && v.length) { clauses.push(`${col(key)} IN (${v.map(() => '?').join(',')})`); params.push(...v); }
           break;
@@ -138,7 +147,7 @@ function expandOrderBy(orderBy) {
   return 'ORDER BY ' + entries.map(([k, v]) => `${col(k)} ${String(v).toUpperCase()}`).join(', ');
 }
 
-async function attachIncludes(model, row, include) {
+async function attachIncludes(model, row, include, conn) {
   if (!include) return row;
   for (const [rel, val] of Object.entries(include)) {
     if (!val) continue;
@@ -148,126 +157,130 @@ async function attachIncludes(model, row, include) {
     const fkValue = row[camel(cfg.currentCol)] ?? row[cfg.currentCol];
     if (fkValue == null) { row[rel] = cfg.isMany ? [] : null; continue; }
     if (cfg.isMany) {
-      row[rel] = await query(`SELECT * FROM \`${cfg.table}\` WHERE \`${cfg.joinCol}\` = ? ORDER BY \`display_order\` ASC`, [fkValue]);
+      row[rel] = await query(`SELECT * FROM \`${cfg.table}\` WHERE \`${cfg.joinCol}\` = ? ORDER BY \`display_order\` ASC`, [fkValue], conn);
     } else {
-      const related = await query(`SELECT * FROM \`${cfg.table}\` WHERE \`${cfg.joinCol}\` = ? LIMIT 1`, [fkValue]);
+      const related = await query(`SELECT * FROM \`${cfg.table}\` WHERE \`${cfg.joinCol}\` = ? LIMIT 1`, [fkValue], conn);
       row[rel] = related[0] || null;
     }
   }
   return row;
 }
 
-async function findUnique(model, args) {
+async function findUnique(model, args, conn) {
   const table = TABLE[model];
   if (!table) return null;
   const w = expandWhere(args?.where);
-  const rows = await query(`SELECT * FROM \`${table}\` WHERE ${w.sql} LIMIT 1`, w.params);
+  const rows = await query(`SELECT * FROM \`${table}\` WHERE ${w.sql} LIMIT 1`, w.params, conn);
   const row = rows[0] || null;
-  return row && args?.include ? attachIncludes(model, row, args.include) : row;
+  return row && args?.include ? attachIncludes(model, row, args.include, conn) : row;
 }
 
-async function findFirst(model, args) {
+async function findFirst(model, args, conn) {
   const table = TABLE[model];
   if (!table) return null;
   const w = expandWhere(args?.where);
   const ob = args?.orderBy ? expandOrderBy(args.orderBy) : '';
-  const rows = await query(`SELECT * FROM \`${table}\` ${w.sql ? 'WHERE ' + w.sql : ''} ${ob} LIMIT 1`, w.params);
+  const rows = await query(`SELECT * FROM \`${table}\` ${w.sql ? 'WHERE ' + w.sql : ''} ${ob} LIMIT 1`, w.params, conn);
   const row = rows[0] || null;
-  return row && args?.include ? attachIncludes(model, row, args.include) : row;
+  return row && args?.include ? attachIncludes(model, row, args.include, conn) : row;
 }
 
-async function findMany(model, args) {
+async function findMany(model, args, conn) {
   const table = TABLE[model];
   if (!table) return [];
   const w = expandWhere(args?.where);
   const ob = args?.orderBy ? expandOrderBy(args.orderBy) : '';
   const limit = args?.take ? `LIMIT ${Number(args.take)}` : '';
   const offset = args?.skip ? `OFFSET ${Number(args.skip)}` : '';
-  let rows = await query(`SELECT * FROM \`${table}\` ${w.sql ? 'WHERE ' + w.sql : ''} ${ob} ${limit} ${offset}`, w.params);
+  let rows = await query(`SELECT * FROM \`${table}\` ${w.sql ? 'WHERE ' + w.sql : ''} ${ob} ${limit} ${offset}`, w.params, conn);
   if (rows && args?.include) {
-    rows = await Promise.all(rows.map(r => attachIncludes(model, r, args.include)));
+    rows = await Promise.all(rows.map(r => attachIncludes(model, r, args.include, conn)));
   }
   return rows;
 }
 
-async function create(model, args) {
+async function create(model, args, conn) {
   const table = TABLE[model];
   if (!table) throw new Error(`Unknown model: ${model}`);
   const data = cols(args.data);
   const keys = Object.keys(data);
   const vals = Object.values(data);
   const placeholders = keys.map(() => '?').join(',');
-  const result = await db.query(
+  const result = await exec(
     `INSERT INTO \`${table}\` (${keys.map(k => '`' + k + '`').join(',')}) VALUES (${placeholders})`,
-    vals
+    vals,
+    conn
   );
   const pk = PK[table] || 'id';
-  const inserted = await query(`SELECT * FROM \`${table}\` WHERE \`${pk}\` = ? LIMIT 1`, [result.insertId]);
+  const inserted = await query(`SELECT * FROM \`${table}\` WHERE \`${pk}\` = ? LIMIT 1`, [result.insertId], conn);
   let row = inserted[0];
   if (!row) row = camelKeys(data);
-  return row && args?.include ? attachIncludes(model, row, args.include) : row;
+  return row && args?.include ? attachIncludes(model, row, args.include, conn) : row;
 }
 
-async function update(model, args) {
+async function update(model, args, conn) {
   const table = TABLE[model];
   if (!table) throw new Error(`Unknown model: ${model}`);
   const data = cols(args.data);
   const w = expandWhere(args.where);
   const setClause = Object.keys(data).map(k => `\`${k}\` = ?`).join(',');
-  await db.query(
+  await exec(
     `UPDATE \`${table}\` SET ${setClause} WHERE ${w.sql}`,
-    [...Object.values(data), ...w.params]
+    [...Object.values(data), ...w.params],
+    conn
   );
-  const rows = await query(`SELECT * FROM \`${table}\` WHERE ${w.sql} LIMIT 1`, w.params);
+  const rows = await query(`SELECT * FROM \`${table}\` WHERE ${w.sql} LIMIT 1`, w.params, conn);
   const row = rows[0] || null;
-  return row && args?.include ? attachIncludes(model, row, args.include) : row;
+  return row && args?.include ? attachIncludes(model, row, args.include, conn) : row;
 }
 
-async function updateMany(model, args) {
+async function updateMany(model, args, conn) {
   const table = TABLE[model];
   if (!table) throw new Error(`Unknown model: ${model}`);
   const data = cols(args.data);
   const w = expandWhere(args.where);
   const setClause = Object.keys(data).map(k => `\`${k}\` = ?`).join(',');
-  const result = await db.query(
+  const result = await exec(
     `UPDATE \`${table}\` SET ${setClause} WHERE ${w.sql}`,
-    [...Object.values(data), ...w.params]
+    [...Object.values(data), ...w.params],
+    conn
   );
   return { count: result.affectedRows };
 }
 
-async function del(model, args) {
+async function del(model, args, conn) {
   const table = TABLE[model];
   if (!table) throw new Error(`Unknown model: ${model}`);
   const w = expandWhere(args.where);
-  const result = await db.query(`DELETE FROM \`${table}\` WHERE ${w.sql}`, w.params);
+  const result = await exec(`DELETE FROM \`${table}\` WHERE ${w.sql}`, w.params, conn);
   return { count: result.affectedRows };
 }
 
 const deleteMany = del;
 
-async function upsert(model, args) {
+async function upsert(model, args, conn) {
   const table = TABLE[model];
   if (!table) throw new Error(`Unknown model: ${model}`);
-  const existing = await findFirst(model, { where: args.where });
+  const existing = await findFirst(model, { where: args.where }, conn);
   if (existing) {
-    return update(model, { where: args.where, data: { ...args.update, ...args.create } });
+    return update(model, { where: args.where, data: { ...args.update, ...args.create } }, conn);
   }
-  return create(model, { data: { ...args.create, ...args.update } });
+  return create(model, { data: { ...args.create, ...args.update } }, conn);
 }
 
-async function count(model, args) {
+async function count(model, args, conn) {
   const table = TABLE[model];
   if (!table) return 0;
   const w = expandWhere(args?.where);
-  const rows = await db.query(
+  const rows = await exec(
     `SELECT COUNT(*) AS \`count\` FROM \`${table}\` ${w.sql ? 'WHERE ' + w.sql : ''}`,
-    w.params
+    w.params,
+    conn
   );
   return Number(rows[0]?.count ?? 0);
 }
 
-async function aggregate(model, args) {
+async function aggregate(model, args, conn) {
   const table = TABLE[model];
   if (!table) throw new Error(`Unknown model: ${model}`);
   const w = expandWhere(args?.where);
@@ -275,9 +288,10 @@ async function aggregate(model, args) {
   const op = args._max ? 'MAX' : 'SUM';
   const field = Object.keys(aggTarget)[0];
   if (!field) return { _max: {}, _sum: {} };
-  const rows = await db.query(
+  const rows = await exec(
     `SELECT ${op}(\`${col(field)}\`) AS \`value\` FROM \`${table}\` ${w.sql ? 'WHERE ' + w.sql : ''}`,
-    w.params
+    w.params,
+    conn
   );
   const result = { _max: {}, _sum: {} };
   if (args._max) result._max[field] = rows[0]?.value ?? null;
@@ -285,13 +299,15 @@ async function aggregate(model, args) {
   return result;
 }
 
-async function groupBy(model, args) {
+async function groupBy(model, args, conn) {
   const table = TABLE[model];
   if (!table) throw new Error(`Unknown model: ${model}`);
   const byFields = args.by || [];
   const selectCols = byFields.map(f => `\`${col(f)}\``).join(', ');
-  const rows = await db.query(
-    `SELECT ${selectCols}, COUNT(*) AS \`_count\` FROM \`${table}\` GROUP BY ${selectCols}`
+  const rows = await exec(
+    `SELECT ${selectCols}, COUNT(*) AS \`_count\` FROM \`${table}\` GROUP BY ${selectCols}`,
+    [],
+    conn
   );
   return rows.map(r => ({ ...r, _count: Number(r._count) }));
 }
@@ -313,5 +329,37 @@ for (const model of Object.keys(TABLE)) {
     groupBy: (args) => groupBy(model, args),
   };
 }
+
+prisma.$transaction = async function (callback) {
+  const conn = await db.pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    const tx = {};
+    for (const model of Object.keys(TABLE)) {
+      tx[model] = {
+        findUnique: (args) => findUnique(model, args, conn),
+        findFirst: (args) => findFirst(model, args, conn),
+        findMany: (args) => findMany(model, args, conn),
+        create: (args) => create(model, args, conn),
+        update: (args) => update(model, args, conn),
+        updateMany: (args) => updateMany(model, args, conn),
+        delete: (args) => del(model, args, conn),
+        deleteMany: (args) => del(model, args, conn),
+        upsert: (args) => upsert(model, args, conn),
+        count: (args) => count(model, args, conn),
+        aggregate: (args) => aggregate(model, args, conn),
+        groupBy: (args) => groupBy(model, args, conn),
+      };
+    }
+    const result = await callback(tx);
+    await conn.commit();
+    return result;
+  } catch (error) {
+    await conn.rollback();
+    throw error;
+  } finally {
+    conn.release();
+  }
+};
 
 module.exports = prisma;
