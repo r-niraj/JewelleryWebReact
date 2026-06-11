@@ -13,8 +13,8 @@ async function main() {
     console.log('Admin created');
   } else {
     await db.pool.execute(
-      'UPDATE admins SET password = ?, email = ? WHERE admin_id = ?',
-      [hash, 'admin@shopsastamart.com', admins[0].admin_id]
+      'UPDATE admins SET password = ? WHERE admin_id = ?',
+      [hash, admins[0].admin_id]
     );
     console.log('Admin password updated');
   }
