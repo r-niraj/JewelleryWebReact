@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 async function main() {
   console.log('Seeding admin...');
   const hash = await bcrypt.hash('BhagwatBhajan@@', 10);
-  const [admins] = await db.pool.execute('SELECT * FROM admins WHERE email = ?', ['admin@shopsastamart.com']);
+  const [admins] = await db.pool.execute('SELECT * FROM admins LIMIT 1');
   if (admins.length === 0) {
     await db.pool.execute(
       'INSERT INTO admins (email, password, name, role) VALUES (?, ?, ?, ?)',
@@ -13,8 +13,8 @@ async function main() {
     console.log('Admin created');
   } else {
     await db.pool.execute(
-      'UPDATE admins SET password = ? WHERE email = ?',
-      [hash, 'admin@shopsastamart.com']
+      'UPDATE admins SET password = ?, email = ? WHERE admin_id = ?',
+      [hash, 'admin@shopsastamart.com', admins[0].admin_id]
     );
     console.log('Admin password updated');
   }

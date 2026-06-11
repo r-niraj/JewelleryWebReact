@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: '/admin/content', icon: 'fa-edit', label: 'Content' },
   { href: '/admin/hero-manager', icon: 'fa-camera', label: 'Hero Manager' },
   { href: '/admin/media', icon: 'fa-images', label: 'Media' },
+  { href: '/admin/settings', icon: 'fa-cog', label: 'Settings' },
 ];
 
 const CONTENT_DROPDOWN = [
