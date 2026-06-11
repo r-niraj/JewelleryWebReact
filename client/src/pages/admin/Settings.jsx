@@ -5,6 +5,9 @@ export default function AdminSettings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const [pw, setPw] = useState({ current: '', newPass: '', confirm: '' });
+  const [pwMsg, setPwMsg] = useState('');
+  const [pwSaving, setPwSaving] = useState(false);
 
   const fetchSettings = async () => {
     setLoading(true);
@@ -97,6 +100,50 @@ export default function AdminSettings() {
             </div>
           ))}
         </div>
+      </div>
+
+      <div className="bg-white rounded-xl shadow-[0_2px_8px_rgba(11,58,66,0.04)] border border-gold-soft/10 p-6 mt-6">
+        <h2 className="font-semibold text-heading text-sm mb-4">Change Password</h2>
+        {pwMsg && (
+          <div className={`text-xs rounded-lg px-4 py-3 mb-4 ${pwMsg === 'Password updated successfully' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+            {pwMsg}
+          </div>
+        )}
+        <div className="grid md:grid-cols-3 gap-4 items-end">
+          <div>
+            <label className="block text-xs font-semibold text-heading mb-1">Current Password</label>
+            <input type="password" value={pw.current} onChange={(e) => setPw({ ...pw, current: e.target.value })}
+              className="w-full px-3 py-2 border-2 border-gold-soft/30 rounded-lg text-xs outline-none bg-ivory focus:bg-white focus:border-emerald-deep transition" />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-heading mb-1">New Password</label>
+            <input type="password" value={pw.newPass} onChange={(e) => setPw({ ...pw, newPass: e.target.value })}
+              className="w-full px-3 py-2 border-2 border-gold-soft/30 rounded-lg text-xs outline-none bg-ivory focus:bg-white focus:border-emerald-deep transition" />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-heading mb-1">Confirm New Password</label>
+            <input type="password" value={pw.confirm} onChange={(e) => setPw({ ...pw, confirm: e.target.value })}
+              className="w-full px-3 py-2 border-2 border-gold-soft/30 rounded-lg text-xs outline-none bg-ivory focus:bg-white focus:border-emerald-deep transition" />
+          </div>
+        </div>
+        <button onClick={async () => {
+          if (pw.newPass !== pw.confirm) { setPwMsg('Passwords do not match'); return; }
+          if (pw.newPass.length < 6) { setPwMsg('New password must be at least 6 characters'); return; }
+          setPwSaving(true); setPwMsg('');
+          try {
+            const res = await fetch('/api/admin/change-password', {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ currentPassword: pw.current, newPassword: pw.newPass }),
+            });
+            const data = await res.json();
+            setPwMsg(data.success ? 'Password updated successfully' : data.error);
+            if (data.success) setPw({ current: '', newPass: '', confirm: '' });
+          } catch { setPwMsg('Failed to change password'); }
+          finally { setPwSaving(false); }
+        }} disabled={pwSaving}
+          className="mt-4 px-4 py-2 bg-emerald-deep text-white rounded-lg text-xs font-semibold hover:bg-teal-luxury disabled:opacity-60 transition">
+          {pwSaving ? 'Updating...' : 'Update Password'}
+        </button>
       </div>
     </div>
   );

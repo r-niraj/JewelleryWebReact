@@ -20,6 +20,7 @@ const authMiddleware = require('./routes/_auth-middleware');
 app.post('/api/admin/login', require('./routes/admin/login'));
 app.post('/api/admin/logout', require('./routes/admin/logout'));
 app.get('/api/admin/me', authMiddleware, require('./routes/admin/me'));
+app.post('/api/admin/change-password', authMiddleware, require('./routes/admin/change-password'));
 
 // Products
 app.get('/api/products', require('./routes/products/index'));
