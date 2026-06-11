@@ -1,39 +1,29 @@
-const prisma = require('../lib/prisma');
+const db = require('../lib/db');
 
 module.exports = async function handler(req, res) {
   try {
     const search = req.query.search?.trim();
 
-    const where = {};
+    let sql = `SELECT c.*, (SELECT COUNT(*) FROM orders WHERE customer_id = c.customer_id) AS order_count FROM customers c`;
+    const params = [];
     if (search) {
-      where.OR = [
-        { fullName: { contains: search } },
-        { phone: { contains: search } },
-      ];
+      sql += ` WHERE c.full_name LIKE ? OR c.phone LIKE ?`;
+      params.push(`%${search}%`, `%${search}%`);
     }
+    sql += ` ORDER BY c.created_at DESC`;
 
-    const customers = await prisma.customer.findMany({
-      where,
-      include: {
-        _count: { select: { orders: true } },
-        orders: {
-          select: { totalAmount: true, createdAt: true },
-          orderBy: { createdAt: 'desc' },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    const customers = await db.query(sql, params);
 
     const result = customers.map((c) => ({
-      customerId: c.customerId,
-      fullName: c.fullName,
+      customerId: c.customer_id,
+      fullName: c.full_name,
       phone: c.phone,
       email: c.email,
       city: c.city,
       state: c.state,
-      orderCount: c._count.orders,
-      totalSpent: c.orders.reduce((sum, o) => sum + Number(o.totalAmount), 0),
-      lastOrderDate: c.orders[0]?.createdAt?.toISOString() || null,
+      orderCount: Number(c.order_count),
+      totalSpent: 0,
+      lastOrderDate: null,
     }));
 
     return res.json({ success: true, customers: result });
