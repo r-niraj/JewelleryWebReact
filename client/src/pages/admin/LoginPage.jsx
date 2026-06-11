@@ -47,7 +47,7 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-muted mb-1">Email</label>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@shopsastamart.com"
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Enter your email"
               className="w-full px-3.5 py-3 border-2 border-gold-soft/30 rounded-xl text-sm outline-none bg-ivory focus:bg-white focus:border-emerald-deep transition" />
           </div>
           <div>

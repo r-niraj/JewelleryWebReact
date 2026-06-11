@@ -3,16 +3,20 @@ const bcrypt = require('bcryptjs');
 
 async function main() {
   console.log('Seeding admin...');
+  const hash = await bcrypt.hash('BhagwatBhajan@@', 10);
   const [admins] = await db.pool.execute('SELECT * FROM admins WHERE email = ?', ['admin@shopsastamart.com']);
   if (admins.length === 0) {
-    const hash = await bcrypt.hash('admin123', 10);
     await db.pool.execute(
       'INSERT INTO admins (email, password, name, role) VALUES (?, ?, ?, ?)',
       ['admin@shopsastamart.com', hash, 'Admin', 'admin']
     );
-    console.log('Admin created: admin@shopsastamart.com / admin123');
+    console.log('Admin created');
   } else {
-    console.log('Admin already exists');
+    await db.pool.execute(
+      'UPDATE admins SET password = ? WHERE email = ?',
+      [hash, 'admin@shopsastamart.com']
+    );
+    console.log('Admin password updated');
   }
 
   console.log('Seeding products...');
