@@ -82,7 +82,21 @@ function expandWhere(where) {
   const clauses = [];
   const params = [];
   for (const [key, val] of Object.entries(where)) {
-    if (val && typeof val === 'object' && !Array.isArray(val) && !(val instanceof Date)) {
+    if (key === 'OR' && Array.isArray(val)) {
+      const orParts = val.map(cond => expandWhere(cond)).filter(p => p.sql);
+      if (orParts.length > 0) {
+        clauses.push('(' + orParts.map(p => p.sql).join(' OR ') + ')');
+        orParts.forEach(p => params.push(...p.params));
+      }
+    } else if (key === 'AND' && Array.isArray(val)) {
+      const andParts = val.map(cond => expandWhere(cond));
+      andParts.forEach(p => {
+        if (p.sql) {
+          clauses.push('(' + p.sql + ')');
+          params.push(...p.params);
+        }
+      });
+    } else if (val && typeof val === 'object' && !Array.isArray(val) && !(val instanceof Date)) {
       const op = Object.keys(val)[0];
       const v = val[op];
       switch (op) {
