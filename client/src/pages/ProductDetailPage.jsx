@@ -359,13 +359,13 @@ export default function ProductDetailPage() {
               <div className="flex flex-col gap-2.5 mb-6">
                 <button
                   onClick={handleBuyNow}
-                  className="w-full bg-[#1A1A1A] text-white text-sm font-sans font-semibold py-3 md:py-4 px-6 md:px-8 hover:bg-[#333] transition text-center tracking-wide"
+                  className="w-full bg-[#1A1A1A] text-white text-sm font-sans font-semibold py-4 px-8 hover:bg-[#333] transition text-center tracking-wide"
                 >
                   Buy Now
                 </button>
                 <button
                   onClick={handleAddToCart}
-                  className="w-full bg-white text-[#1A1A1A] text-sm font-sans font-medium py-3 md:py-4 px-6 md:px-8 border border-[#1A1A1A] hover:bg-[#F5F5F3] transition text-center tracking-wide"
+                  className="w-full bg-white text-[#1A1A1A] text-sm font-sans font-medium py-4 px-8 border border-[#1A1A1A] hover:bg-[#F5F5F3] transition text-center tracking-wide"
                 >
                   {addedToCart ? (
                     <><i className="fas fa-check mr-1.5" /> Added to Cart</>
