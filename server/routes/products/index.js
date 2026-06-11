@@ -30,8 +30,8 @@ async function getHandler(req, res) {
       prisma.product.findMany({
         where,
         include: {
-          images: { where: { isPrimary: true }, take: 1 },
-          videos: { take: 1 },
+          images: { where: { isPrimary: true }, take: 1, orderBy: { displayOrder: 'asc' } },
+          videos: { take: 1, orderBy: { displayOrder: 'asc' } },
         },
         orderBy: [{ isFeatured: 'desc' }, { createdAt: 'desc' }],
         skip,

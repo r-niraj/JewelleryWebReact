@@ -31,7 +31,7 @@ async function getHandler(req, res) {
           { isFeatured: true },
         ].filter(Boolean),
       },
-      include: { images: { where: { isPrimary: true }, take: 1 } },
+      include: { images: { where: { isPrimary: true }, take: 1, orderBy: { displayOrder: 'asc' } } },
       take: 4,
       orderBy: { createdAt: 'desc' },
     });

@@ -159,7 +159,7 @@ async function attachIncludes(model, row, include, conn) {
     if (fkValue == null) { row[rel] = cfg.isMany ? [] : null; continue; }
     let orderClause = '';
     if (cfg.isMany) {
-      orderClause = val.orderBy ? ' ' + expandOrderBy(val.orderBy) : ' ORDER BY `display_order` ASC';
+      orderClause = val.orderBy ? ' ' + expandOrderBy(val.orderBy) : '';
     }
     if (cfg.isMany) {
       row[rel] = await query(`SELECT * FROM \`${cfg.table}\` WHERE \`${cfg.joinCol}\` = ?${orderClause}`, [fkValue], conn);
