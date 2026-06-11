@@ -112,6 +112,14 @@ function expandWhere(where) {
 function expandOrderBy(orderBy) {
   if (!orderBy) return '';
   if (typeof orderBy === 'string') return 'ORDER BY ' + col(orderBy) + ' ASC';
+  if (Array.isArray(orderBy)) {
+    const parts = orderBy.map(item => {
+      const entry = Object.entries(item)[0];
+      if (!entry) return '';
+      return `${col(entry[0])} ${String(entry[1]).toUpperCase()}`;
+    }).filter(Boolean);
+    return 'ORDER BY ' + parts.join(', ');
+  }
   const entries = Object.entries(orderBy);
   return 'ORDER BY ' + entries.map(([k, v]) => `${col(k)} ${String(v).toUpperCase()}`).join(', ');
 }

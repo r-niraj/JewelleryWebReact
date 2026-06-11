@@ -1,4 +1,17 @@
 const mysql = require('mysql2/promise');
+const fs = require('fs');
+const path = require('path');
+
+if (!process.env.DATABASE_URL) {
+  const envPath = path.join(__dirname, '..', '.env');
+  if (fs.existsSync(envPath)) {
+    const lines = fs.readFileSync(envPath, 'utf8').split('\n');
+    for (const line of lines) {
+      const m = line.match(/^\s*([\w_]+)\s*=\s*"([^"]*)"\s*$/);
+      if (m) process.env[m[1]] = m[2];
+    }
+  }
+}
 
 const pool = mysql.createPool({
   uri: process.env.DATABASE_URL,
