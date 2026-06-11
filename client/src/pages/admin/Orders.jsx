@@ -63,7 +63,7 @@ export default function Orders() {
       o.customer?.city,
       o.customer?.state,
       o.customer?.pincode,
-      o.productName,
+      o.items?.length ? o.items.map(i => i.productName).join(' | ') : o.productName,
       o.quantity,
       o.unitPrice,
       o.totalAmount,
@@ -133,7 +133,16 @@ export default function Orders() {
                   <td className="px-3.5 py-3 font-semibold whitespace-nowrap">{o.customer?.fullName}</td>
                   <td className="px-3.5 py-3 whitespace-nowrap">{o.customer?.phone}</td>
                   <td className="px-3.5 py-3 whitespace-nowrap">{o.customer?.city}</td>
-                  <td className="px-3.5 py-3">{o.productName}</td>
+                  <td className="px-3.5 py-3">
+                    {o.items?.length ? (
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-semibold">{o.items.length} items</span>
+                        <span className="text-[0.55rem] text-gray-400 truncate max-w-[180px] block leading-tight">
+                          {o.items.map(i => i.productName).join(', ')}
+                        </span>
+                      </div>
+                    ) : o.productName}
+                  </td>
                   <td className="px-3.5 py-3 text-center">{o.quantity}</td>
                   <td className="px-3.5 py-3 font-semibold whitespace-nowrap">₹{Number(o.totalAmount).toLocaleString()}</td>
                   <td className="px-3.5 py-3 whitespace-nowrap">
@@ -169,8 +178,9 @@ export default function Orders() {
                 ['Customer', selectedOrder.customer?.fullName],
                 ['Phone', selectedOrder.customer?.phone],
                 ['Address', `${selectedOrder.customer?.address}, ${selectedOrder.customer?.city}, ${selectedOrder.customer?.state} - ${selectedOrder.customer?.pincode}`],
-                ['Product', selectedOrder.productName],
-                ['Quantity', String(selectedOrder.quantity)],
+                ...(selectedOrder.items?.length
+                  ? selectedOrder.items.map((item, i) => [`Item ${i + 1}`, `${item.productName} × ${item.quantity} — ₹${Number(item.totalPrice).toLocaleString()}`])
+                  : [['Product', selectedOrder.productName], ['Quantity', String(selectedOrder.quantity)]]),
                 ['Total', `₹${Number(selectedOrder.totalAmount).toLocaleString()}`],
                 ['Payment', selectedOrder.paymentMethod],
                 ['Tracking', selectedOrder.trackingNumber || '—'],
