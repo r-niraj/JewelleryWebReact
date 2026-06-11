@@ -46,6 +46,7 @@ const INCLUDE_MAP = {
   'product.videos': { table: 'product_videos', currentCol: 'id', joinCol: 'product_id', isMany: true },
   'order.customer': { table: 'customers', currentCol: 'customer_id', joinCol: 'customer_id' },
   'order.items': { table: 'order_items', currentCol: 'order_id', joinCol: 'order_id', isMany: true },
+  'order.statusHistory': { table: 'order_status_history', currentCol: 'order_id', joinCol: 'order_id', isMany: true },
   'heroMedia.media': { table: 'media_library', currentCol: 'media_id', joinCol: 'id' },
   'sectionImage.media': { table: 'media_library', currentCol: 'media_id', joinCol: 'id' },
 };
@@ -156,8 +157,12 @@ async function attachIncludes(model, row, include, conn) {
     if (!cfg) continue;
     const fkValue = row[camel(cfg.currentCol)] ?? row[cfg.currentCol];
     if (fkValue == null) { row[rel] = cfg.isMany ? [] : null; continue; }
+    let orderClause = '';
     if (cfg.isMany) {
-      row[rel] = await query(`SELECT * FROM \`${cfg.table}\` WHERE \`${cfg.joinCol}\` = ? ORDER BY \`display_order\` ASC`, [fkValue], conn);
+      orderClause = val.orderBy ? ' ' + expandOrderBy(val.orderBy) : ' ORDER BY `display_order` ASC';
+    }
+    if (cfg.isMany) {
+      row[rel] = await query(`SELECT * FROM \`${cfg.table}\` WHERE \`${cfg.joinCol}\` = ?${orderClause}`, [fkValue], conn);
     } else {
       const related = await query(`SELECT * FROM \`${cfg.table}\` WHERE \`${cfg.joinCol}\` = ? LIMIT 1`, [fkValue], conn);
       row[rel] = related[0] || null;
