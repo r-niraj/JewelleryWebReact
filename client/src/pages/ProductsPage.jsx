@@ -161,11 +161,31 @@ export default function ProductsPage() {
                 each piece is thoughtfully designed to complement your unique style. Whether you are looking for a birthday gift for your girlfriend, 
                 an anniversary surprise, or a treat for yourself, our collection offers premium quality at affordable prices.
               </p>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center text-xs text-body">
-                <div className="bg-champagne rounded-[12px] p-4"><i className="fas fa-gem text-emerald-deep text-lg mb-2 block" />Premium Quality</div>
-                <div className="bg-champagne rounded-[12px] p-4"><i className="fas fa-truck text-emerald-deep text-lg mb-2 block" />Free Shipping</div>
-                <div className="bg-champagne rounded-[12px] p-4"><i className="fas fa-gift text-emerald-deep text-lg mb-2 block" />Gift Box Included</div>
-                <div className="bg-champagne rounded-[12px] p-4"><i className="fas fa-undo text-emerald-deep text-lg mb-2 block" />Easy Returns</div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+                <div className="bg-champagne rounded-2xl p-5 text-center transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 cursor-default">
+                  <div className="w-11 h-11 mx-auto mb-3.5 rounded-xl bg-emerald-deep/10 flex items-center justify-center">
+                    <i className="fas fa-gem text-emerald-deep text-lg" />
+                  </div>
+                  <span className="text-[0.75rem] font-medium text-heading leading-tight">Premium<br />Quality</span>
+                </div>
+                <div className="bg-champagne rounded-2xl p-5 text-center transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 cursor-default">
+                  <div className="w-11 h-11 mx-auto mb-3.5 rounded-xl bg-emerald-deep/10 flex items-center justify-center">
+                    <i className="fas fa-truck text-emerald-deep text-lg" />
+                  </div>
+                  <span className="text-[0.75rem] font-medium text-heading">Free Shipping</span>
+                </div>
+                <div className="bg-champagne rounded-2xl p-5 text-center transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 cursor-default">
+                  <div className="w-11 h-11 mx-auto mb-3.5 rounded-xl bg-emerald-deep/10 flex items-center justify-center">
+                    <i className="fas fa-gift text-emerald-deep text-lg" />
+                  </div>
+                  <span className="text-[0.75rem] font-medium text-heading">Gift Box Included</span>
+                </div>
+                <div className="bg-champagne rounded-2xl p-5 text-center transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 cursor-default">
+                  <div className="w-11 h-11 mx-auto mb-3.5 rounded-xl bg-emerald-deep/10 flex items-center justify-center">
+                    <i className="fas fa-undo text-emerald-deep text-lg" />
+                  </div>
+                  <span className="text-[0.75rem] font-medium text-heading">Easy Returns</span>
+                </div>
               </div>
             </div>
           </section>
