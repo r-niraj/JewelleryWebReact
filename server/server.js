@@ -1,18 +1,20 @@
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const compression = require('compression');
 const path = require('path');
 const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+app.use(compression());
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), { maxAge: '1y', immutable: true }));
 
 const authMiddleware = require('./routes/_auth-middleware');
 

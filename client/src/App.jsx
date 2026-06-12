@@ -1,37 +1,38 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { checkAdminAuth } from './store/slices/adminAuthSlice';
-import LandingPage from './pages/LandingPage';
-import ProductsPage from './pages/ProductsPage';
-import ProductDetailPage from './pages/ProductDetailPage';
-import CartPage from './pages/CartPage';
-import CheckoutPage from './pages/CheckoutPage';
-import TrackOrderPage from './pages/TrackOrderPage';
-import BlogPage from './pages/BlogPage';
-import BlogArticlePage from './pages/BlogArticlePage';
-import AboutPage from './pages/AboutPage';
-import ContactPage from './pages/ContactPage';
-import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
-import TermsPage from './pages/TermsPage';
-import ShippingPolicyPage from './pages/ShippingPolicyPage';
-import ReturnPolicyPage from './pages/ReturnPolicyPage';
-import AdminLoginPage from './pages/admin/LoginPage';
-import AdminDashboard from './pages/admin/Dashboard';
-import AdminOrders from './pages/admin/Orders';
-import AdminProducts from './pages/admin/Products';
-import AdminProductEdit from './pages/admin/ProductEdit';
-import AdminCustomers from './pages/admin/Customers';
-import AdminContent from './pages/admin/Content';
-import AdminHero from './pages/admin/HeroContent';
-import AdminGallery from './pages/admin/Gallery';
-import AdminFeatures from './pages/admin/Features';
-import AdminCTA from './pages/admin/CTA';
-import AdminBenefits from './pages/admin/Benefits';
-import AdminHeroManager from './pages/admin/HeroManager';
-import AdminMedia from './pages/admin/Media';
-import AdminSettings from './pages/admin/Settings';
-import AdminLayout from './pages/admin/AdminLayout';
+
+const LandingPage = lazy(() => import('./pages/LandingPage'));
+const ProductsPage = lazy(() => import('./pages/ProductsPage'));
+const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage'));
+const CartPage = lazy(() => import('./pages/CartPage'));
+const CheckoutPage = lazy(() => import('./pages/CheckoutPage'));
+const TrackOrderPage = lazy(() => import('./pages/TrackOrderPage'));
+const BlogPage = lazy(() => import('./pages/BlogPage'));
+const BlogArticlePage = lazy(() => import('./pages/BlogArticlePage'));
+const AboutPage = lazy(() => import('./pages/AboutPage'));
+const ContactPage = lazy(() => import('./pages/ContactPage'));
+const PrivacyPolicyPage = lazy(() => import('./pages/PrivacyPolicyPage'));
+const TermsPage = lazy(() => import('./pages/TermsPage'));
+const ShippingPolicyPage = lazy(() => import('./pages/ShippingPolicyPage'));
+const ReturnPolicyPage = lazy(() => import('./pages/ReturnPolicyPage'));
+const AdminLoginPage = lazy(() => import('./pages/admin/LoginPage'));
+const AdminDashboard = lazy(() => import('./pages/admin/Dashboard'));
+const AdminOrders = lazy(() => import('./pages/admin/Orders'));
+const AdminProducts = lazy(() => import('./pages/admin/Products'));
+const AdminProductEdit = lazy(() => import('./pages/admin/ProductEdit'));
+const AdminCustomers = lazy(() => import('./pages/admin/Customers'));
+const AdminContent = lazy(() => import('./pages/admin/Content'));
+const AdminHero = lazy(() => import('./pages/admin/HeroContent'));
+const AdminGallery = lazy(() => import('./pages/admin/Gallery'));
+const AdminFeatures = lazy(() => import('./pages/admin/Features'));
+const AdminCTA = lazy(() => import('./pages/admin/CTA'));
+const AdminBenefits = lazy(() => import('./pages/admin/Benefits'));
+const AdminHeroManager = lazy(() => import('./pages/admin/HeroManager'));
+const AdminMedia = lazy(() => import('./pages/admin/Media'));
+const AdminSettings = lazy(() => import('./pages/admin/Settings'));
+const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
 
 function JsonLd({ data }) {
   return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }} />;
@@ -54,44 +55,50 @@ function App() {
         url: import.meta.env.VITE_SITE_URL || 'https://shopsastamart.com',
         logo: `${import.meta.env.VITE_SITE_URL || 'https://shopsastamart.com'}/icon.svg`,
       }} />
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/products" element={<ProductsPage />} />
-        <Route path="/products/:slug" element={<ProductDetailPage />} />
-        <Route path="/cart" element={<CartPage />} />
-        <Route path="/checkout" element={<CheckoutPage />} />
-        <Route path="/track-order" element={<TrackOrderPage />} />
-        <Route path="/blog" element={<BlogPage />} />
-        <Route path="/blog/:slug" element={<BlogArticlePage />} />
-        <Route path="/about" element={<AboutPage />} />
-        <Route path="/contact" element={<ContactPage />} />
-        <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-        <Route path="/privacy" element={<PrivacyPolicyPage />} />
-        <Route path="/terms-of-service" element={<TermsPage />} />
-        <Route path="/terms" element={<TermsPage />} />
-        <Route path="/shipping-policy" element={<ShippingPolicyPage />} />
-        <Route path="/shipping" element={<ShippingPolicyPage />} />
-        <Route path="/return-policy" element={<ReturnPolicyPage />} />
-        <Route path="/returns" element={<ReturnPolicyPage />} />
-        <Route path="/admin/login" element={<AdminLoginPage />} />
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<AdminDashboard />} />
-          <Route path="dashboard" element={<AdminDashboard />} />
-          <Route path="orders" element={<AdminOrders />} />
-          <Route path="products" element={<AdminProducts />} />
-          <Route path="products/:slug" element={<AdminProductEdit />} />
-          <Route path="customers" element={<AdminCustomers />} />
-          <Route path="content" element={<AdminContent />} />
-          <Route path="content/hero" element={<AdminHero />} />
-          <Route path="content/gallery" element={<AdminGallery />} />
-          <Route path="content/features" element={<AdminFeatures />} />
-          <Route path="content/cta" element={<AdminCTA />} />
-          <Route path="content/benefits" element={<AdminBenefits />} />
-          <Route path="hero-manager" element={<AdminHeroManager />} />
-          <Route path="media" element={<AdminMedia />} />
-          <Route path="settings" element={<AdminSettings />} />
-        </Route>
-      </Routes>
+      <Suspense fallback={
+        <div className="min-h-screen bg-ivory flex items-center justify-center">
+          <div className="w-10 h-10 border-2 border-emerald-deep/20 border-t-emerald-deep rounded-full animate-spin" />
+        </div>
+      }>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/products" element={<ProductsPage />} />
+          <Route path="/products/:slug" element={<ProductDetailPage />} />
+          <Route path="/cart" element={<CartPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/track-order" element={<TrackOrderPage />} />
+          <Route path="/blog" element={<BlogPage />} />
+          <Route path="/blog/:slug" element={<BlogArticlePage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+          <Route path="/privacy" element={<PrivacyPolicyPage />} />
+          <Route path="/terms-of-service" element={<TermsPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/shipping-policy" element={<ShippingPolicyPage />} />
+          <Route path="/shipping" element={<ShippingPolicyPage />} />
+          <Route path="/return-policy" element={<ReturnPolicyPage />} />
+          <Route path="/returns" element={<ReturnPolicyPage />} />
+          <Route path="/admin/login" element={<AdminLoginPage />} />
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="orders" element={<AdminOrders />} />
+            <Route path="products" element={<AdminProducts />} />
+            <Route path="products/:slug" element={<AdminProductEdit />} />
+            <Route path="customers" element={<AdminCustomers />} />
+            <Route path="content" element={<AdminContent />} />
+            <Route path="content/hero" element={<AdminHero />} />
+            <Route path="content/gallery" element={<AdminGallery />} />
+            <Route path="content/features" element={<AdminFeatures />} />
+            <Route path="content/cta" element={<AdminCTA />} />
+            <Route path="content/benefits" element={<AdminBenefits />} />
+            <Route path="hero-manager" element={<AdminHeroManager />} />
+            <Route path="media" element={<AdminMedia />} />
+            <Route path="settings" element={<AdminSettings />} />
+          </Route>
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }

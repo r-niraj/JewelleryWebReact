@@ -467,6 +467,7 @@ export default function LandingPage() {
                       alt={heroGalleryItems[selectedMediaIdx]?.altText || "Premium Crystal Necklace"}
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.35] cursor-crosshair"
                       onClick={() => setShowLightbox(true)}
+                      fetchpriority="high"
                     />
                   </motion.div>
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/5">
@@ -753,7 +754,7 @@ export default function LandingPage() {
                   <Link to={`/products/${p.slug}`} className="group block bg-white rounded-[16px] overflow-hidden border border-gold-soft/10 hover:shadow-[0_8px_30px_rgba(11,58,66,0.08)] transition-all duration-300 hover:-translate-y-0.5 h-full">
                     <div className="aspect-square overflow-hidden bg-champagne relative">
                       <img src={img?.imageUrl || "/images/necklace-1.jpeg"} alt={p.name}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
                       {disc > 0 && (
                         <span className="absolute top-3 left-3 bg-red-600/90 text-white text-[0.5rem] font-bold px-2 py-0.5 rounded-full">{disc}% OFF</span>
                       )}

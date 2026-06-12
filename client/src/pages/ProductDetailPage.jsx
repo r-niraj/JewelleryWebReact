@@ -281,6 +281,7 @@ export default function ProductDetailPage() {
                         src={item.imageUrl || item.fileUrl}
                         alt={item.altText || `View ${idx + 1}`}
                         className="w-full h-full object-cover"
+                        loading="lazy"
                       />
                     )}
                   </button>
@@ -521,6 +522,7 @@ export default function ProductDetailPage() {
                       src={img?.imageUrl || "/images/necklace-1.jpeg"}
                       alt={r.name}
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      loading="lazy"
                     />
                     {relDiscount > 0 && (
                       <span className="absolute top-3 left-3 bg-[#1A1A1A] text-white text-[0.45rem] font-semibold px-2 py-1">{relDiscount}% OFF</span>

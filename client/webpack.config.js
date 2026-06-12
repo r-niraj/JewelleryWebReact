@@ -9,6 +9,7 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, '..', 'server', 'public'),
     filename: isDev ? 'assets/[name].js' : 'assets/[name].[contenthash:8].js',
+    chunkFilename: isDev ? 'assets/[name].js' : 'assets/[name].[contenthash:8].chunk.js',
     publicPath: '/',
     clean: { keep: /(images|uploads)\// },
   },
@@ -44,6 +45,18 @@ module.exports = {
         generator: { filename: 'assets/[name][ext]' },
       },
     ],
+  },
+  optimization: {
+    splitChunks: {
+      chunks: 'async',
+      cacheGroups: {
+        vendor: {
+          test: /[\\/]node_modules[\\/]/,
+          priority: 10,
+          reuseExistingChunk: true,
+        },
+      },
+    },
   },
   plugins: [
     new HtmlWebpackPlugin({
