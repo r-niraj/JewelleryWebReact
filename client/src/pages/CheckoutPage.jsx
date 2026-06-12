@@ -201,7 +201,7 @@ function CheckoutForm() {
   return (
     <div className="min-h-screen bg-[#FAFAF8]">
       <div className="bg-[#FAFAF8] border-b border-[#E8E6E1] px-5 py-4 flex items-center justify-between">
-        <Link to="/" className="font-serif text-base font-normal tracking-wide text-[#1A1A1A]">Shopsastamart</Link>
+        <Logo />
         <Link to="/cart" className="text-xs text-[#6B6B6B] hover:text-[#1A1A1A] transition"><i className="fas fa-arrow-left mr-1" /> Back to Cart</Link>
       </div>
 
@@ -343,6 +343,7 @@ function CheckoutForm() {
   );
 }
 
+import Logo from '../components/Logo';
 export default function CheckoutPage() {
   return (
     <Suspense fallback={<div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center"><div className="w-10 h-10 border-2 border-gray-200 border-t-[#1A1A1A] rounded-full animate-spin" /></div>}>

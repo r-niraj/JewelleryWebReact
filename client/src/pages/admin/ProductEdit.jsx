@@ -18,6 +18,9 @@ export default function ProductEdit() {
     sku: '',
     stockQuantity: '0',
     category: '',
+    detailsMaterials: '',
+    shippingReturns: '',
+    careInstructions: '',
     isFeatured: false,
     isActive: true,
   });
@@ -43,6 +46,9 @@ export default function ProductEdit() {
             sku: p.sku || '',
             stockQuantity: String(p.stockQuantity),
             category: p.category || '',
+            detailsMaterials: p.detailsMaterials || '',
+            shippingReturns: p.shippingReturns || '',
+            careInstructions: p.careInstructions || '',
             isFeatured: p.isFeatured,
             isActive: p.isActive,
           });
@@ -191,6 +197,21 @@ export default function ProductEdit() {
             <div className="mt-4">
               <label className="block text-xs font-semibold text-heading mb-1">Full Description</label>
               <textarea value={form.fullDescription} onChange={(e) => update('fullDescription', e.target.value)} rows={4}
+                className="w-full px-3 py-2.5 border-2 border-gold-soft/30 rounded-lg text-sm outline-none bg-ivory focus:bg-white focus:border-emerald-deep transition resize-none" />
+            </div>
+            <div className="mt-4">
+              <label className="block text-xs font-semibold text-heading mb-1">Product Details & Materials</label>
+              <textarea value={form.detailsMaterials} onChange={(e) => update('detailsMaterials', e.target.value)} rows={3}
+                className="w-full px-3 py-2.5 border-2 border-gold-soft/30 rounded-lg text-sm outline-none bg-ivory focus:bg-white focus:border-emerald-deep transition resize-none" />
+            </div>
+            <div className="mt-4">
+              <label className="block text-xs font-semibold text-heading mb-1">Shipping & Returns</label>
+              <textarea value={form.shippingReturns} onChange={(e) => update('shippingReturns', e.target.value)} rows={3}
+                className="w-full px-3 py-2.5 border-2 border-gold-soft/30 rounded-lg text-sm outline-none bg-ivory focus:bg-white focus:border-emerald-deep transition resize-none" />
+            </div>
+            <div className="mt-4">
+              <label className="block text-xs font-semibold text-heading mb-1">Care Instructions</label>
+              <textarea value={form.careInstructions} onChange={(e) => update('careInstructions', e.target.value)} rows={3}
                 className="w-full px-3 py-2.5 border-2 border-gold-soft/30 rounded-lg text-sm outline-none bg-ivory focus:bg-white focus:border-emerald-deep transition resize-none" />
             </div>
           </div>

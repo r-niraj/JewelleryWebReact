@@ -15,6 +15,7 @@ const COLLECTION_FAQS = [
   { q: "Is gift packaging included?", a: "Every order comes in a premium velvet gift box, ready to gift." },
 ];
 
+import Logo from '../components/Logo';
 export default function ProductsPage() {
   const dispatch = useDispatch();
   const itemCount = useSelector(selectCartItemCount);
@@ -39,7 +40,7 @@ export default function ProductsPage() {
       <JsonLd data={faqSchema(COLLECTION_FAQS)} />
       <div className="border-b border-gold-soft/20 bg-ivory/80 backdrop-blur-sm sticky top-0 z-30">
         <div className="max-w-[1280px] mx-auto px-5 py-4 flex items-center justify-between">
-          <Link to="/" className="font-serif text-lg font-normal tracking-wide text-heading">Shopsastamart</Link>
+          <Logo />
           <Link to="/cart" className="relative text-lg font-medium text-heading hover:opacity-60 transition">
             <i className="fas fa-shopping-bag" />
             {itemCount > 0 && (
@@ -108,24 +109,19 @@ export default function ProductsPage() {
                       )}
                     </div>
                   </Link>
-                  <div className="p-4">
+                  <div className="p-4 sm:p-5">
                     <Link to={`/products/${product.slug}`}>
                       <h3 className="font-medium text-sm text-heading mb-1 line-clamp-1 hover:text-emerald-deep transition">{product.name}</h3>
                     </Link>
-                    <p className="text-[0.65rem] text-body font-light mb-2 line-clamp-2">{product.shortDescription}</p>
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="text-gold-soft tracking-wider text-xs">⭐⭐⭐⭐⭐</span>
-                      <span className="text-[0.55rem] text-muted">(4.8)</span>
+                    <div className="flex items-baseline gap-2 mb-1.5">
+                      <span className="font-sans text-base sm:text-lg font-semibold text-heading">₹{Number(product.price).toLocaleString()}</span>
+                      <span className="text-[0.6rem] text-muted line-through">₹{Number(product.originalPrice).toLocaleString()}</span>
                     </div>
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="font-sans text-lg font-medium text-heading">₹{Number(product.price).toLocaleString()}</span>
-                      <span className="text-xs text-muted line-through">₹{Number(product.originalPrice).toLocaleString()}</span>
+                    <div className="flex items-center gap-1 mb-2.5">
+                      <span className="text-gold-soft tracking-wider text-[0.5rem]">⭐⭐⭐⭐⭐</span>
+                      <span className="text-[0.45rem] text-muted">4.8/5</span>
                     </div>
                     <div className="flex gap-1.5">
-                      <Link to={`/products/${product.slug}`}
-                        className="flex-1 flex items-center justify-center py-2 px-2 border border-gold-soft/30 rounded-[8px] text-[0.55rem] font-sans font-medium text-heading hover:bg-gold-soft/10 transition">
-                        Details
-                      </Link>
                       <button
                         onClick={() => {
                           const img = product.images?.[0];
@@ -141,13 +137,12 @@ export default function ProductsPage() {
                           setAddedSlugs((prev) => new Set(prev).add(product.slug));
                           setTimeout(() => setAddedSlugs((prev) => { const n = new Set(prev); n.delete(product.slug); return n; }), 1500);
                         }}
-                        className="flex-1 flex items-center justify-center py-2 px-2 bg-emerald-deep text-white rounded-[8px] text-[0.55rem] font-sans font-medium hover:bg-teal-luxury transition">
+                        className="flex-[2] flex items-center justify-center py-1.5 sm:py-2 px-2 bg-emerald-deep text-white rounded-[6px] text-[0.5rem] sm:text-[0.55rem] font-sans font-semibold tracking-wide hover:bg-teal-luxury transition whitespace-nowrap">
                         {addedSlugs.has(product.slug) ? <><i className="fas fa-check mr-0.5" /> Added</> : "Add to Cart"}
                       </button>
                       <Link to={`/checkout?product=${product.slug}`}
-                        title="Buy Now"
-                        className="flex items-center justify-center w-8 py-2 bg-[#1A1A1A] text-white rounded-[8px] text-[0.55rem] hover:bg-[#333] transition">
-                        <i className="fas fa-bolt" />
+                        className="flex-1 flex items-center justify-center py-1.5 sm:py-2 px-2 bg-[#1A1A1A] text-white rounded-[6px] text-[0.5rem] sm:text-[0.55rem] font-sans font-semibold tracking-wide hover:bg-[#333] transition whitespace-nowrap">
+                        Buy Now
                       </Link>
                     </div>
                   </div>
@@ -200,7 +195,7 @@ export default function ProductsPage() {
         <div className="max-w-[1280px] mx-auto px-5 py-12">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div>
-              <Link to="/" className="font-serif text-base text-white">Shopsastamart</Link>
+              <Logo className="[&_span:last-child]:text-white [&_span:last-child_span]:text-white/60" />
               <p className="text-[0.6rem] font-light mt-3">Handcrafted jewelry for the discerning.</p>
             </div>
             <div>
@@ -228,7 +223,7 @@ export default function ProductsPage() {
             </div>
           </div>
           <div className="border-t border-white/10 mt-8 pt-6 text-[0.5rem] text-center">
-            &copy; 2026 Shopsastamart. All rights reserved.
+            &copy; 2026 Shop Sasta Mart. All rights reserved.
           </div>
         </div>
       </footer>

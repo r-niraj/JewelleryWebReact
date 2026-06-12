@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useSelector, useDispatch } from 'react-redux'
 import { addItem, selectCartItemCount } from '../store/slices/cartSlice'
 import JsonLd from '../components/JsonLd';
+import Logo from '../components/Logo';
 import { productSchema, breadcrumbSchema, faqSchema } from '../lib/schema';
 import { SITE_URL } from '../lib/seo';
 
@@ -84,9 +85,9 @@ export default function ProductDetailPage() {
   const discount = product ? Math.round((1 - Number(product.price) / Number(product.originalPrice)) * 100) : 0;
 
   const accordionSections = [
-    { id: "details", label: "Product Details & Materials", content: "18k gold-plated sterling silver chain (18-inch). Pendant: 14mm x 12mm heart motif. Lobster clasp closure. Hypoallergenic and nickel-free. Tarnish-resistant finish for lasting brilliance." },
-    { id: "shipping", label: "Shipping & Returns", content: "Free shipping on all orders within India. Dispatch within 24 hours. Estimated delivery: 3-5 business days. 30-day easy returns from the date of delivery. Items must be returned in original packaging with all tags attached." },
-    { id: "care", label: "Care Instructions", content: "Avoid contact with water, perfume, and cosmetics. Store in a dry, cool place away from direct sunlight. Clean gently with a soft, dry cloth after each wear. Remove before sleeping, showering, or exercising." },
+    { id: "details", label: "Product Details & Materials", content: product?.detailsMaterials || "18k gold-plated sterling silver chain (18-inch). Pendant: 14mm x 12mm heart motif. Lobster clasp closure. Hypoallergenic and nickel-free. Tarnish-resistant finish for lasting brilliance." },
+    { id: "shipping", label: "Shipping & Returns", content: product?.shippingReturns || "Free shipping on all orders within India. Dispatch within 24 hours. Estimated delivery: 3-5 business days. 30-day easy returns from the date of delivery. Items must be returned in original packaging with all tags attached." },
+    { id: "care", label: "Care Instructions", content: product?.careInstructions || "Avoid contact with water, perfume, and cosmetics. Store in a dry, cool place away from direct sunlight. Clean gently with a soft, dry cloth after each wear. Remove before sleeping, showering, or exercising." },
   ];
 
   const handleAddToCart = useCallback(() => {
@@ -191,7 +192,7 @@ export default function ProductDetailPage() {
       <header className="bg-[#FAFAFA]/80 backdrop-blur-sm sticky top-0 z-30 border-b border-[#E8E6E1]/50">
         <div className="max-w-[1440px] mx-auto px-6 md:px-10 py-4 flex items-center justify-between">
           <div className="flex items-center gap-5">
-              <Link to="/" className="font-serif text-base tracking-wide text-[#1A1A1A]">Shopsastamart</Link>
+              <Logo />
             <span className="text-[#C8C4BC] text-[0.5rem] hidden sm:inline">/</span>
             <Link to="/products" className="text-[0.65rem] text-[#8B8B8B] hover:text-[#1A1A1A] transition hidden sm:inline">Collection</Link>
             <span className="text-[#C8C4BC] text-[0.5rem]">/</span>
@@ -481,7 +482,7 @@ export default function ProductDetailPage() {
           <h2 className="font-serif text-[clamp(1.4rem,3.5vw,2.2rem)] font-medium text-[#1A1A1A] tracking-tight">Every Occasion</h2>
           <p className="text-[0.75rem] text-[#6B6B6B] font-light max-w-[460px] mx-auto mt-3 leading-relaxed">From office meetings to weddings, this piece complements every look.</p>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-[800px] mx-auto">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-5 max-w-[800px] mx-auto">
           {[
             { icon: "fa-briefcase", label: "Office Wear" },
             { icon: "fa-ring", label: "Weddings" },
@@ -492,9 +493,11 @@ export default function ProductDetailPage() {
             { icon: "fa-gift", label: "Gifting" },
             { icon: "fa-calendar-day", label: "Festivals" },
           ].map((occ) => (
-            <div key={occ.label} className="bg-[#F5F5F3] rounded-[8px] p-4 text-center">
-              <i className={`fas ${occ.icon} text-[#1A1A1A] text-lg mb-2 block`} />
-              <span className="text-[0.6rem] text-[#6B6B6B] font-medium">{occ.label}</span>
+            <div key={occ.label} className="group bg-white rounded-[16px] p-5 sm:p-6 text-center border border-[#E8E6E1] hover:border-gold-soft/40 hover:shadow-[0_4px_20px_rgba(0,0,0,0.04)] transition-all duration-300">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-[#F5F5F3] group-hover:bg-emerald-deep/5 flex items-center justify-center mx-auto mb-3 sm:mb-4 transition-colors duration-300">
+                <i className={`fas ${occ.icon} text-[#1A1A1A] group-hover:text-emerald-deep text-lg sm:text-xl transition-colors duration-300`} />
+              </div>
+              <span className="text-[0.65rem] sm:text-[0.7rem] text-[#4A4A4A] font-medium tracking-wide">{occ.label}</span>
             </div>
           ))}
         </div>
@@ -648,7 +651,7 @@ export default function ProductDetailPage() {
         <div className="max-w-[1440px] mx-auto px-6 md:px-10 py-16 md:py-20">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-16">
             <div className="col-span-2 md:col-span-1">
-              <Link to="/" className="font-serif text-lg font-normal tracking-wide text-white">Shopsastamart</Link>
+              <Logo className="[&_span:last-child]:text-white [&_span:last-child_span]:text-white/60" />
               <p className="text-[0.65rem] font-light leading-relaxed mt-4 max-w-[220px]">Handcrafted jewelry for the discerning. Quality, artistry, and timeless design.</p>
             </div>
             <div>
@@ -679,7 +682,7 @@ export default function ProductDetailPage() {
             </div>
           </div>
           <div className="flex items-center justify-between border-t border-white/10 mt-14 pt-8">
-            <p className="text-[0.55rem] text-[#8B8B8B]">&copy; 2026 Shopsastamart. All rights reserved.</p>
+            <p className="text-[0.55rem] text-[#8B8B8B]">&copy; 2026 Shop Sasta Mart. All rights reserved.</p>
             <div className="flex items-center gap-4">
               <a href="https://instagram.com/shopsastamart" target="_blank" rel="noopener noreferrer" className="text-[#B8B4AD] hover:text-white transition text-xs" aria-label="Follow us on Instagram"><i className="fab fa-instagram" /></a>
               <a href="https://pinterest.com/shopsastamart" target="_blank" rel="noopener noreferrer" className="text-[#B8B4AD] hover:text-white transition text-xs" aria-label="Follow us on Pinterest"><i className="fab fa-pinterest" /></a>

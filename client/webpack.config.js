@@ -8,7 +8,7 @@ module.exports = {
   entry: './src/main.jsx',
   output: {
     path: path.resolve(__dirname, '..', 'server', 'public'),
-    filename: 'assets/[name].[contenthash:8].js',
+    filename: isDev ? 'assets/[name].js' : 'assets/[name].[contenthash:8].js',
     publicPath: '/',
     clean: { keep: /(images|uploads)\// },
   },
@@ -57,9 +57,12 @@ module.exports = {
   devServer: {
     port: 5173,
     hot: true,
+    liveReload: true,
+    watchFiles: ['src/**/*'],
     historyApiFallback: true,
     static: {
       directory: path.resolve(__dirname, '..', 'server', 'public'),
+      watch: false,
     },
     proxy: [
       {

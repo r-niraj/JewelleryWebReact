@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import { updateQuantity, removeItem, clearCart, selectCartItems, selectCartItemCount, selectCartSubtotal, selectCartSavings } from '../store/slices/cartSlice'
 import { motion } from "framer-motion";
 
+import Logo from '../components/Logo';
 export default function CartPage() {
   const dispatch = useDispatch();
   const items = useSelector(selectCartItems);
@@ -31,7 +32,7 @@ export default function CartPage() {
     <div className="min-h-screen bg-[#FAFAF8]">
       <div className="border-b border-[#E8E6E1] bg-[#FAFAF8]/80 backdrop-blur-sm sticky top-0 z-30">
         <div className="max-w-[1100px] mx-auto px-5 py-4 flex items-center justify-between">
-          <Link to="/" className="font-serif text-base font-normal tracking-wide text-[#1A1A1A]">Shopsastamart</Link>
+          <Logo />
           <Link to="/products" className="text-xs text-[#6B6B6B] hover:text-[#1A1A1A] transition">
             <i className="fas fa-arrow-left mr-1" /> Continue Shopping
           </Link>

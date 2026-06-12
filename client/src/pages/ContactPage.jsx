@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import Logo from '../components/Logo';
 
 const CONTACT_EMAIL = "support@shopsastamart.com";
 const CONTACT_WHATSAPP = "918678037094";
@@ -7,7 +8,7 @@ export default function ContactPage() {
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
       <div className="max-w-[720px] mx-auto px-6 py-20">
-        <Link to="/" className="font-serif text-base tracking-wide text-[#1A1A1A] hover:opacity-70 transition mb-8 inline-block">Shopsastamart</Link>
+        <Logo />
         <h1 className="font-serif text-3xl font-semibold text-[#1A1A1A] mb-2">Contact Us</h1>
         <p className="text-[0.82rem] text-[#6B6B6B] font-light mb-10">We&apos;d love to hear from you. Reach out with any questions, orders, or feedback.</p>
 

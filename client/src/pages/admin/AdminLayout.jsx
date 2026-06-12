@@ -61,8 +61,8 @@ export default function AdminLayout() {
   return (
     <div className="flex min-h-screen bg-ivory">
       <aside className="w-[220px] bg-emerald-deep text-white flex-shrink-0 flex flex-col sticky top-0 h-screen">
-        <div className="font-serif text-lg font-semibold tracking-wide px-4 pt-6 pb-7">
-          Shopsastamart <span className="text-gold-soft">Admin</span>
+        <div className="px-4 pt-6 pb-7">
+          <span className="font-serif text-lg font-semibold tracking-wide text-white">Admin</span>
         </div>
         <nav className="flex flex-col gap-1 px-3 flex-1">
           {NAV_ITEMS.map((item) => {

@@ -1,10 +1,11 @@
 import { Link } from "react-router-dom";
+import Logo from '../components/Logo';
 
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
       <div className="max-w-[720px] mx-auto px-6 py-20">
-        <Link to="/" className="font-serif text-base tracking-wide text-[#1A1A1A] hover:opacity-70 transition mb-8 inline-block">Shopsastamart</Link>
+        <Logo />
         <h1 className="font-serif text-3xl font-semibold text-[#1A1A1A] mb-6">About Shopsastamart</h1>
         <div className="prose prose-sm max-w-none text-[#4A4A4A]">
           <p>Shopsastamart was born from a simple belief: every woman deserves jewelry that makes her feel confident, beautiful, and unforgettable. We handcraft premium fashion jewelry that combines timeless design with modern aesthetics.</p>

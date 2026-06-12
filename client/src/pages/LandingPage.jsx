@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useSelector, useDispatch } from 'react-redux'
 import { addItem, selectCartItems } from '../store/slices/cartSlice'
 import JsonLd from '../components/JsonLd';
+import Logo from '../components/Logo';
 import { breadcrumbSchema, faqSchema } from '../lib/schema';
 import { SITE_URL } from '../lib/seo';
 
@@ -320,30 +321,56 @@ export default function LandingPage() {
         transition={{ duration: 0.35, ease: "easeInOut" }}
       >
         <div className="max-w-[1280px] mx-auto px-5 h-full flex items-center justify-between">
-          <span className="font-serif text-base font-normal text-heading">Shopsastamart</span>
-          <div className="flex items-center gap-4">
-            <span className="font-bold text-emerald-deep text-base">₹{heroPrice.toLocaleString()}</span>
-            <span className="text-sm text-muted line-through">₹{heroDiscountPrice.toLocaleString()}</span>
-            <div className="flex items-center gap-2.5">
-              <Link to="/products" data-track="nav-shop-click" className="text-[0.7rem] font-semibold text-heading hover:text-emerald-deep transition">Shop</Link>
-              <button onClick={handleOrderNow} className="bg-emerald-deep text-white text-[0.75rem] font-bold py-2 px-5 rounded-[14px] uppercase tracking-wide hover:bg-teal-luxury transition shadow-[0_2px_8px_rgba(11,58,66,0.15)] cursor-pointer">{noFeatured ? "Shop Now" : "Order Now"}</button>
+          <div className="flex items-center gap-2 sm:gap-0">
+            <span className="hidden sm:inline"><Logo /></span>
+            <span className="sm:hidden"><Logo /></span>
+            <div className="flex sm:hidden items-baseline gap-1.5 ml-2 pl-2 border-l border-gold-soft/20">
+              <span className="font-bold text-emerald-deep text-sm">₹{heroPrice.toLocaleString()}</span>
+              <span className="text-[0.55rem] text-muted line-through">₹{heroDiscountPrice.toLocaleString()}</span>
             </div>
+          </div>
+          <div className="flex items-center gap-3 sm:gap-5">
+            <div className="hidden sm:flex items-center gap-3">
+              <span className="font-bold text-emerald-deep text-sm">₹{heroPrice.toLocaleString()}</span>
+              <span className="text-xs text-muted line-through">₹{heroDiscountPrice.toLocaleString()}</span>
+              <Link to="/products" data-track="nav-shop-click" className="text-[0.7rem] font-semibold text-heading hover:text-emerald-deep transition">Shop</Link>
+            </div>
+            <button onClick={handleOrderNow} className="bg-emerald-deep text-white text-[0.65rem] sm:text-[0.75rem] font-bold py-1.5 px-3 sm:py-2 sm:px-5 rounded-[10px] uppercase tracking-wide whitespace-nowrap hover:bg-teal-luxury transition shadow-[0_2px_8px_rgba(11,58,66,0.15)] cursor-pointer">{noFeatured ? "Shop Now" : "Order Now"}</button>
           </div>
         </div>
       </motion.header>
 
       <section id="hero-section" className="min-h-screen flex flex-col bg-ivory relative">
         <div className="flex justify-between items-center px-5 pt-4 relative z-10 max-w-[1280px] mx-auto w-full">
-          <span className="font-serif text-sm font-semibold tracking-wider text-heading">ELEGANCE</span>
-          <div className="flex items-center gap-3 text-xs font-medium text-body">
-            <Link to="/products" data-track="nav-shop-click" className="text-heading hover:text-emerald-deep transition font-semibold">
-              Shop
+          <Logo />
+          <div className="flex items-center gap-4">
+            <div className="hidden sm:flex items-center gap-3">
+              <Link to="/products" data-track="nav-shop-click"
+                className="flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-deep/5 hover:bg-emerald-deep/10 text-emerald-deep rounded-full text-[0.65rem] font-semibold transition">
+                <i className="fas fa-store text-[0.5rem]" /> Shop
+              </Link>
+              <Link to="/track-order"
+                className="flex items-center gap-1.5 px-3.5 py-1.5 bg-body/5 hover:bg-body/10 text-body rounded-full text-[0.65rem] font-medium transition">
+                <i className="fas fa-search text-[0.45rem]" /> Track Order
+              </Link>
+            </div>
+            <div className="hidden sm:flex items-center gap-2 pl-4 border-l border-gold-soft/20">
+              <span className="text-gold-soft tracking-wider text-sm">⭐⭐⭐⭐⭐</span>
+              <span className="text-xs text-muted">4.8/5 <span className="font-normal">(1k+)</span></span>
+            </div>
+            <Link to="/cart" className="relative flex items-center justify-center w-9 h-9 rounded-full bg-emerald-deep/5 hover:bg-emerald-deep/10 text-heading hover:text-emerald-deep transition">
+              <i className="fas fa-shopping-bag text-sm" />
             </Link>
-            <Link to="/track-order" className="text-muted hover:text-emerald-deep transition flex items-center gap-1">
-              <i className="fas fa-search text-[0.6rem]" /> Track
-            </Link>
-            <span className="text-gold-soft tracking-wider text-sm">⭐⭐⭐⭐⭐</span>
-            <span>4.8/5 <span className="text-muted font-normal">(1k+)</span></span>
+          </div>
+        </div>
+        <div className="flex sm:hidden items-center justify-between px-5 pt-3">
+          <div className="flex items-center gap-3">
+            <Link to="/products" className="text-[0.75rem] font-semibold text-heading">Shop</Link>
+            <Link to="/track-order" className="text-[0.75rem] text-muted font-medium flex items-center gap-1"><i className="fas fa-search text-[0.5rem]" /> Track</Link>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-gold-soft tracking-wider text-[0.55rem]">⭐⭐⭐⭐⭐</span>
+            <span className="text-[0.6rem] text-muted font-medium">4.8/5</span>
           </div>
         </div>
 
@@ -815,7 +842,7 @@ export default function LandingPage() {
       </Section>
 
       <Section className="bg-ivory">
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
           {(trustFeatures.length > 0 ? trustFeatures : [
             { icon: "fa-rupee-sign", title: "Cash On Delivery Available", desc: "Pay only when you receive. No upfront payment needed." },
             { icon: "fa-shipping-fast", title: "Fast Delivery Across India", desc: "Delivered within 3-7 business days. Tracked shipping." },
@@ -825,13 +852,13 @@ export default function LandingPage() {
             { icon: "fa-heart", title: "Trusted by Hundreds", desc: "Join 1,000+ happy customers who love their Shopsastamart necklace." },
           ]).map((item, i) => (
             <Reveal key={i} delay={i * 0.1}>
-              <div className="flex items-center gap-3 p-4 rounded-[16px] bg-champagne h-full">
-                <div className="w-10 h-10 rounded-full bg-emerald-deep flex items-center justify-center text-white text-sm flex-shrink-0">
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:gap-3 p-5 sm:p-4 rounded-[20px] bg-champagne h-full text-center sm:text-left">
+                <div className="w-12 h-12 sm:w-10 sm:h-10 rounded-full bg-emerald-deep flex items-center justify-center text-white text-base sm:text-sm flex-shrink-0">
                   <i className={`fas ${item.icon}`} />
                 </div>
                 <div>
                   <h4 className="font-sans text-sm font-semibold text-heading mb-0.5">{item.title}</h4>
-                  <p className="text-xs text-body font-light">{item.desc}</p>
+                  <p className="text-xs text-body font-light leading-relaxed">{item.desc}</p>
                 </div>
               </div>
             </Reveal>
@@ -928,18 +955,26 @@ export default function LandingPage() {
         <SectionLabel>Delivery Info</SectionLabel>
         <SectionTitle>When Will You Get It?</SectionTitle>
         <SectionSub>We ship across India with real-time tracking on every order.</SectionSub>
-        <div className="max-w-[680px] mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="max-w-[680px] mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8">
           {[
-            { city: "Delhi NCR", time: deliveryDelhi, icon: "fa-bolt", desc: "Fastest delivery in the region" },
-            { city: "Metro Cities", time: deliveryMetro, icon: "fa-truck", desc: "Mumbai, Bangalore, Chennai, Kolkata" },
-            { city: "Other Cities", time: deliveryOther, icon: "fa-map-marked-alt", desc: "Across India with tracking" },
+            { city: "Delhi NCR", time: deliveryDelhi, icon: "fa-bolt", desc: "Fastest delivery in the region", accent: "from-emerald-deep to-teal-luxury", badge: "Express" },
+            { city: "Metro Cities", time: deliveryMetro, icon: "fa-truck", desc: "Mumbai, Bangalore, Chennai, Kolkata", accent: "from-emerald-deep to-teal-luxury", badge: "Standard" },
+            { city: "Other Cities", time: deliveryOther, icon: "fa-map-marked-alt", desc: "Across India with tracking", accent: "from-emerald-deep to-teal-luxury", badge: "Nationwide" },
           ].map((d, i) => (
             <Reveal key={i} delay={i * 0.1}>
-              <div className="bg-white rounded-[16px] p-6 text-center border border-gold-soft/20 h-full flex flex-col items-center justify-center">
-                <div className="w-12 h-12 rounded-full bg-emerald-deep/10 flex items-center justify-center text-emerald-deep text-lg mb-3"><i className={`fas ${d.icon}`} /></div>
-                <div className="text-xs text-muted font-medium mb-0.5">{d.city}</div>
-                <div className="font-serif text-xl font-bold text-heading">{d.time}</div>
-                <div className="text-[0.65rem] text-body font-light mt-1">{d.desc}</div>
+              <div className="relative bg-white rounded-[20px] p-5 md:p-6 border border-gold-soft/20 h-full flex flex-row md:flex-col items-center md:text-center gap-4 md:gap-3 shadow-[0_2px_12px_rgba(0,0,0,0.03)] overflow-hidden">
+                <div className={`absolute top-0 left-0 w-1 md:w-full h-full md:h-1 bg-gradient-to-b md:bg-gradient-to-r ${d.accent} rounded-l-[20px] md:rounded-t-[20px] md:rounded-bl-none`} />
+                <div className="relative w-14 h-14 md:w-12 md:h-12 rounded-2xl bg-emerald-deep/5 flex items-center justify-center text-emerald-deep text-xl md:text-lg flex-shrink-0 border border-emerald-deep/10">
+                  <i className={`fas ${d.icon}`} />
+                </div>
+                <div className="flex-1 min-w-0 md:text-center">
+                  <div className="flex items-center md:justify-center gap-2 mb-0.5">
+                    <span className="text-[0.65rem] font-semibold text-muted uppercase tracking-wider">{d.city}</span>
+                    <span className={`text-[0.55rem] font-bold px-1.5 py-0.5 rounded-full bg-gradient-to-r ${d.accent} text-white`}>{d.badge}</span>
+                  </div>
+                  <div className="font-serif text-2xl md:text-xl font-bold text-heading tracking-tight">{d.time}</div>
+                  <div className="text-[0.65rem] text-body font-light mt-0.5 leading-relaxed">{d.desc}</div>
+                </div>
               </div>
             </Reveal>
           ))}
@@ -1192,7 +1227,7 @@ export default function LandingPage() {
           <Link to="/return-policy" className="text-gold-soft hover:underline">Returns</Link>
           <Link to="/privacy-policy" className="text-gold-soft hover:underline">Privacy</Link>
         </div>
-        <p>© 2026 Shopsastamart. All rights reserved.</p>
+        <p>© 2026 Shop Sasta Mart. All rights reserved.</p>
         <p>WhatsApp: <a href={`https://wa.me/${whatsAppNumber}`} className="text-gold-soft">+91-{whatsAppNumber}</a> &nbsp;|&nbsp; Email: <a href="mailto:support@shopsastamart.com" className="text-gold-soft">support@shopsastamart.com</a></p>
         <p className="mt-2"><Link to="/track-order" className="text-gold-soft hover:underline">Track Your Order</Link></p>
       </footer>

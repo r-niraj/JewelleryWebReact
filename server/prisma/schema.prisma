@@ -38,6 +38,9 @@ model Product {
   sku              String?        @db.VarChar(100)
   stockQuantity    Int            @default(0) @map("stock_quantity")
   category         String?        @db.VarChar(100)
+  detailsMaterials  String?        @map("details_materials") @db.Text
+  shippingReturns   String?        @map("shipping_returns") @db.Text
+  careInstructions  String?        @map("care_instructions") @db.Text
   isActive         Boolean        @default(true) @map("is_active")
   isFeatured       Boolean        @default(false) @map("is_featured")
   createdAt        DateTime       @default(now()) @map("created_at")

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { loginAdmin, selectAdmin, selectAdminLoading, selectAdminError } from '../../store/slices/adminAuthSlice';
+import Logo from '../../components/Logo';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -36,7 +37,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-emerald-deep via-teal-luxury to-emerald-deep flex items-center justify-center p-5">
       <div className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-[0_8px_30px_rgba(11,58,66,0.12)]">
         <div className="text-center mb-6">
-          <div className="font-serif text-2xl font-semibold tracking-wide text-heading">Shopsastamart</div>
+          <Logo link={false} />
           <div className="text-xs text-emerald-deep font-semibold tracking-widest uppercase mt-0.5">Admin Login</div>
         </div>
 

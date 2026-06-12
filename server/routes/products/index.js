@@ -55,7 +55,7 @@ async function getHandler(req, res) {
 
 async function postHandler(req, res) {
   try {
-    const { name, slug, shortDescription, fullDescription, price, originalPrice, sku, stockQuantity, category, isFeatured } = req.body;
+    const { name, slug, shortDescription, fullDescription, price, originalPrice, sku, stockQuantity, category, isFeatured, detailsMaterials, shippingReturns, careInstructions } = req.body;
 
     if (!name || !slug || !price) {
       return res.status(400).json({ success: false, error: 'name, slug, and price are required' });
@@ -81,6 +81,9 @@ async function postHandler(req, res) {
         sku: sku || '',
         stockQuantity: stockQuantity || 0,
         category: category || null,
+        detailsMaterials: detailsMaterials || null,
+        shippingReturns: shippingReturns || null,
+        careInstructions: careInstructions || null,
         isFeatured: isFeatured || false,
       },
     });

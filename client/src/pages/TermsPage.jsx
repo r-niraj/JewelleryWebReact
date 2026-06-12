@@ -1,10 +1,11 @@
 import { Link } from "react-router-dom";
+import Logo from '../components/Logo';
 
 export default function TermsPage() {
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
       <div className="max-w-[720px] mx-auto px-6 py-20">
-        <Link to="/" className="font-serif text-base tracking-wide text-[#1A1A1A] hover:opacity-70 transition mb-8 inline-block">Shopsastamart</Link>
+        <Logo />
         <h1 className="font-serif text-3xl font-semibold text-[#1A1A1A] mb-6">Terms of Service</h1>
         <p className="text-[0.75rem] text-[#8B8B8B] mb-8">Last updated: January 2026</p>
         <div className="space-y-6 text-[0.82rem] text-[#4A4A4A] font-light leading-[1.9]">

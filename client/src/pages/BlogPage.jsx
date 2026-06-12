@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import Logo from '../components/Logo';
 
 const BLOG_POSTS = [
   {
@@ -49,7 +50,7 @@ export default function BlogPage() {
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
       <div className="max-w-[960px] mx-auto px-6 py-20">
-        <Link to="/" className="font-serif text-base tracking-wide text-[#1A1A1A] hover:opacity-70 transition mb-8 inline-block">Shopsastamart</Link>
+        <Logo />
         <div className="mb-12">
           <h1 className="font-serif text-3xl font-semibold text-[#1A1A1A] mb-3">Style Journal</h1>
           <p className="text-[0.82rem] text-[#6B6B6B] font-light">Jewelry styling tips, gift guides, and fashion inspiration.</p>
