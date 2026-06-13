@@ -271,6 +271,10 @@ export default function LandingPage() {
       navigate("/products");
       return;
     }
+    if (featuredProduct.status && featuredProduct.status !== 'AVAILABLE') {
+      navigate(`/products/${featuredProduct.slug}`);
+      return;
+    }
     const primaryImage = featuredProduct.images?.find((i) => i.isPrimary) || featuredProduct.images?.[0];
     dispatch(addItem({
       productId: featuredProduct.id,
@@ -281,6 +285,7 @@ export default function LandingPage() {
       image: primaryImage?.imageUrl || "",
       quantity: 1,
       maxQuantity: featuredProduct.stockQuantity || 99,
+      status: featuredProduct.status || 'AVAILABLE',
     }));
     navigate(`/checkout?product=${featuredProduct.slug}&qty=1`);
   }, [featuredProduct, dispatch, navigate]);
@@ -572,6 +577,20 @@ export default function LandingPage() {
             <p className="text-sm text-body font-light leading-relaxed">{heroSubtitle || "Designed to turn heads. Made to be remembered. Premium fashion jewelry that looks like a fortune."}</p>
 
             <div className="bg-champagne rounded-[16px] p-5 -mx-1">
+              {featuredProduct?.status && featuredProduct.status !== 'AVAILABLE' ? (
+                <div className={`text-center py-2 ${featuredProduct.status === 'OUT_OF_STOCK' ? 'text-red-600' : 'text-amber-600'}`}>
+                  <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[0.55rem] font-semibold uppercase tracking-wider ${
+                    featuredProduct.status === 'OUT_OF_STOCK' ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-700'
+                  }`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${
+                      featuredProduct.status === 'OUT_OF_STOCK' ? 'bg-red-500' : 'bg-amber-500'
+                    }`} />
+                    {featuredProduct.status === 'OUT_OF_STOCK' ? 'Out of Stock' : 'Temporarily Unavailable'}
+                  </span>
+                  <p className="text-[0.65rem] mt-2 font-medium">This product is currently unavailable. View similar items below.</p>
+                </div>
+              ) : (
+              <>
               <div className="flex items-center justify-center lg:justify-start gap-3 flex-wrap">
                 <span className="font-serif text-[clamp(2rem,5vw,2.8rem)] font-bold text-heading leading-none">₹{heroPrice.toLocaleString()}</span>
                 <span className="text-sm text-muted line-through">₹{heroDiscountPrice.toLocaleString()}</span>
@@ -582,12 +601,33 @@ export default function LandingPage() {
                   <i className="fas fa-clock animate-pulse" /> Only {stockCount} left in stock
                 </p>
               )}
+              </>
+              )}
             </div>
 
             {offerEnd && countdown.days + countdown.hours + countdown.minutes + countdown.seconds > 0 && (
-              <div className="bg-amber-50 rounded-[10px] px-4 py-2.5 flex items-center justify-center lg:justify-start gap-3 text-xs border border-amber-200/50">
-                <span className="font-semibold text-amber-800">⏳ {offerTitle}:</span>
-                <span className="font-mono font-bold text-amber-900 tracking-wider">{String(countdown.days).padStart(2, "0")}d {String(countdown.hours).padStart(2, "0")}h {String(countdown.minutes).padStart(2, "0")}m {String(countdown.seconds).padStart(2, "0")}s</span>
+              <div className="rounded-[14px] px-4 py-3.5 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/50 shadow-[0_2px_12px_rgba(251,191,36,0.12)]">
+                <div className="flex items-center justify-center lg:justify-start gap-1.5 mb-2.5">
+                  <span className="flex items-center gap-1 text-[0.65rem] font-bold text-amber-800 uppercase tracking-wider">
+                    <i className="fas fa-bolt text-amber-500 animate-pulse" /> {offerTitle}
+                  </span>
+                </div>
+                <div className="flex items-center justify-center lg:justify-start gap-2">
+                  {[
+                    { label: "Days", value: countdown.days },
+                    { label: "Hrs", value: countdown.hours },
+                    { label: "Min", value: countdown.minutes },
+                    { label: "Sec", value: countdown.seconds },
+                  ].map((unit, i) => (
+                    <div key={unit.label} className="flex items-center gap-2">
+                      <div className="bg-white rounded-[10px] w-[48px] md:w-[56px] py-2 px-1 text-center shadow-[inset_0_1px_3px_rgba(0,0,0,0.04)] border border-amber-200/40">
+                        <div className="font-serif text-lg md:text-xl font-bold text-heading leading-none">{String(unit.value).padStart(2, "0")}</div>
+                        <div className="text-[0.4rem] text-amber-700/60 uppercase tracking-wider mt-0.5 font-medium">{unit.label}</div>
+                      </div>
+                      {i < 3 && <span className="text-amber-400 text-xs font-bold -mt-3">:</span>}
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -749,14 +789,22 @@ export default function LandingPage() {
             {featuredProducts.map((p, i) => {
               const img = p.images?.[0];
               const disc = Math.round((1 - Number(p.price) / Number(p.originalPrice)) * 100);
+              const isUnavailable = p.status && p.status !== 'AVAILABLE';
               return (
                 <Reveal key={p.id} delay={i * 0.06}>
-                  <Link to={`/products/${p.slug}`} className="group block bg-white rounded-[16px] overflow-hidden border border-gold-soft/10 hover:shadow-[0_8px_30px_rgba(11,58,66,0.08)] transition-all duration-300 hover:-translate-y-0.5 h-full">
-                    <div className="aspect-square overflow-hidden bg-champagne relative">
+                  <Link to={`/products/${p.slug}`} className={`group block bg-white rounded-[16px] overflow-hidden border border-gold-soft/10 hover:shadow-[0_8px_30px_rgba(11,58,66,0.08)] transition-all duration-300 hover:-translate-y-0.5 h-full ${isUnavailable ? 'opacity-80' : ''}`}>
+                    <div className={`aspect-square overflow-hidden bg-champagne relative ${isUnavailable ? 'saturate-[0.3]' : ''}`}>
                       <img src={img?.imageUrl || "/images/necklace-1.jpeg"} alt={p.name}
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
                       {disc > 0 && (
                         <span className="absolute top-3 left-3 bg-red-600/90 text-white text-[0.5rem] font-bold px-2 py-0.5 rounded-full">{disc}% OFF</span>
+                      )}
+                      {isUnavailable && (
+                        <span className={`absolute top-3 right-3 backdrop-blur-sm rounded-full px-2 py-0.5 shadow-sm text-[0.45rem] font-semibold uppercase tracking-wider ${
+                          p.status === 'OUT_OF_STOCK' ? 'bg-red-50/90 text-red-600' : 'bg-amber-50/90 text-amber-700'
+                        }`}>
+                          {p.status === 'OUT_OF_STOCK' ? 'Out of Stock' : 'Unavailable'}
+                        </span>
                       )}
                     </div>
                     <div className="p-4">
@@ -1087,19 +1135,24 @@ export default function LandingPage() {
       {offerEnd && countdown.days + countdown.hours + countdown.minutes + countdown.seconds > 0 && (
         <section className="bg-champagne text-center py-16 lg:py-[100px] px-5">
           <div className="max-w-[1280px] mx-auto">
-            <div className="text-[0.7rem] font-semibold tracking-[3px] uppercase text-emerald-deep mb-2">⏳ {offerTitle}</div>
-            <h2 className="font-serif text-[clamp(1.4rem,4vw,2rem)] font-semibold text-heading mb-2">Offer Ends In</h2>
-            <p className="text-sm text-body font-light mb-6">Don't miss out on this exclusive offer. Thousands of women have already ordered.</p>
-            <div className="flex justify-center gap-4">
+            <div className="flex items-center justify-center gap-2 text-[0.65rem] md:text-[0.75rem] font-bold tracking-[3px] uppercase text-emerald-deep mb-2">
+              <span className="w-2 h-2 bg-emerald-deep rounded-full animate-pulse" /> ⏳ {offerTitle} <span className="w-2 h-2 bg-emerald-deep rounded-full animate-pulse" />
+            </div>
+            <h2 className="font-serif text-[clamp(1.6rem,5vw,2.6rem)] font-bold text-heading mb-2 tracking-tight">Offer Ends In</h2>
+            <p className="text-sm md:text-base text-body font-light mb-6 max-w-md mx-auto">Hurry! This exclusive offer won't last long. Thousands of women have already ordered.</p>
+            <div className="flex justify-center gap-3 md:gap-5">
               {[
                 { label: "Days", value: countdown.days },
                 { label: "Hours", value: countdown.hours },
                 { label: "Minutes", value: countdown.minutes },
                 { label: "Seconds", value: countdown.seconds },
-              ].map((unit) => (
-                <div key={unit.label} className="bg-white rounded-[16px] w-[70px] md:w-[90px] py-3 px-2 text-center shadow-[0_2px_8px_rgba(11,58,66,0.06)]">
-                  <div className="font-serif text-2xl md:text-3xl font-bold text-heading">{String(unit.value).padStart(2, "0")}</div>
-                  <div className="text-[0.6rem] text-muted uppercase tracking-wider mt-0.5">{unit.label}</div>
+              ].map((unit, i) => (
+                <div key={unit.label} className="flex items-center gap-3 md:gap-5">
+                  <div className="bg-white rounded-[16px] w-[80px] md:w-[110px] py-3.5 md:py-5 px-2 text-center shadow-[0_4px_16px_rgba(11,58,66,0.08)] border border-amber-200/20">
+                    <div className="font-serif text-3xl md:text-4xl font-bold text-heading">{String(unit.value).padStart(2, "0")}</div>
+                    <div className="text-[0.55rem] md:text-[0.65rem] text-amber-700/70 uppercase tracking-wider mt-0.5 font-medium">{unit.label}</div>
+                  </div>
+                  {i < 3 && <span className="text-amber-300 text-xl md:text-2xl font-bold hidden sm:block">:</span>}
                 </div>
               ))}
             </div>

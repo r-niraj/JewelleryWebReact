@@ -11,7 +11,7 @@ async function getHandler(req, res) {
   try {
     const { slug } = req.params;
     const product = await prisma.product.findUnique({
-      where: { slug, isActive: true },
+      where: { slug },
       include: {
         images: { orderBy: [{ isPrimary: 'desc' }, { displayOrder: 'asc' }] },
         videos: { orderBy: { displayOrder: 'asc' } },
@@ -25,6 +25,7 @@ async function getHandler(req, res) {
     const related = await prisma.product.findMany({
       where: {
         isActive: true,
+        status: 'AVAILABLE',
         id: { not: product.id },
         OR: [
           { category: product.category || undefined },
@@ -87,6 +88,9 @@ async function putHandler(req, res) {
         ...(body.careInstructions !== undefined && { careInstructions: body.careInstructions }),
         ...(body.isActive !== undefined && { isActive: body.isActive }),
         ...(body.isFeatured !== undefined && { isFeatured: body.isFeatured }),
+        ...(body.status !== undefined && { status: body.status, availabilityUpdatedAt: new Date() }),
+        ...(body.expectedRestockDate !== undefined && { expectedRestockDate: body.expectedRestockDate }),
+        ...(body.unavailableReason !== undefined && { unavailableReason: body.unavailableReason }),
       },
     });
 

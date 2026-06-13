@@ -102,6 +102,7 @@ export default function ProductDetailPage() {
       image: primaryImage?.imageUrl || "",
       maxQuantity: product.stockQuantity || 10,
       quantity: qty,
+      status: product.status || 'AVAILABLE',
     }));
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2000);
@@ -119,6 +120,7 @@ export default function ProductDetailPage() {
       image: primaryImage?.imageUrl || "",
       maxQuantity: product.stockQuantity || 10,
       quantity: qty,
+      status: product.status || 'AVAILABLE',
     }));
     navigate(`/checkout?product=${product.slug}&qty=${qty}`);
   }, [product, qty, dispatch, navigate]);
@@ -305,6 +307,20 @@ export default function ProductDetailPage() {
                 </div>
               </div>
 
+              {product.status && product.status !== 'AVAILABLE' && (
+                <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[0.55rem] font-semibold uppercase tracking-wider mb-4 ${
+                  product.status === 'OUT_OF_STOCK' ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-700'
+                }`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${
+                    product.status === 'OUT_OF_STOCK' ? 'bg-red-500' : 'bg-amber-500'
+                  }`} />
+                  {product.status === 'OUT_OF_STOCK' ? 'Out of Stock' : 'Currently Unavailable'}
+                  {product.expectedRestockDate && (
+                    <span className="ml-1 font-normal normal-case">· Restock: {new Date(product.expectedRestockDate).toLocaleDateString()}</span>
+                  )}
+                </div>
+              )}
+
               <h1 className="font-serif text-[clamp(1.8rem,4vw,3rem)] font-semibold text-[#1A1A1A] leading-[1.08] tracking-tight mb-5">
                 {product.name}
               </h1>
@@ -346,6 +362,23 @@ export default function ProductDetailPage() {
                 </div>
               </div>
 
+              {product.status && product.status !== 'AVAILABLE' ? (
+                <div className="bg-amber-50/50 border border-amber-200/50 rounded-lg p-4 mb-6 text-center">
+                  <p className="text-xs text-amber-800 font-medium">
+                    <i className="fas fa-info-circle mr-1" />
+                    This product is currently unavailable. Please check back later.
+                  </p>
+                  {product.expectedRestockDate && (
+                    <p className="text-[0.65rem] text-amber-600 mt-1">
+                      Expected restock: {new Date(product.expectedRestockDate).toLocaleDateString()}
+                    </p>
+                  )}
+                  {product.unavailableReason && (
+                    <p className="text-[0.65rem] text-amber-600 mt-0.5">{product.unavailableReason}</p>
+                  )}
+                </div>
+              ) : (
+                <>
               <div className="flex items-center gap-5 mb-6">
                 <span className="text-[0.5rem] font-sans font-medium uppercase tracking-[0.15em] text-[#B8B4AD]">Qty</span>
                 <div className="flex items-center border border-[#D4D0C8] rounded-[4px]">
@@ -376,6 +409,8 @@ export default function ProductDetailPage() {
                   )}
                 </button>
               </div>
+                </>
+              )}
 
               <div className="bg-[#F5F5F3] p-4 mb-8">
                 <div className="grid grid-cols-5 gap-2">

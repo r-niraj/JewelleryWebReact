@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from 'react-redux'
-import { updateQuantity, removeItem, clearCart, selectCartItems, selectCartItemCount, selectCartSubtotal, selectCartSavings } from '../store/slices/cartSlice'
+import { updateQuantity, removeItem, clearCart, updateItemStatus, selectCartItems, selectCartItemCount, selectCartSubtotal, selectCartSavings } from '../store/slices/cartSlice'
 import { motion } from "framer-motion";
 
 import Logo from '../components/Logo';
@@ -10,6 +11,23 @@ export default function CartPage() {
   const itemCount = useSelector(selectCartItemCount);
   const subtotal = useSelector(selectCartSubtotal);
   const savings = useSelector(selectCartSavings);
+  const [unavailableSlugs, setUnavailableSlugs] = useState(new Set());
+
+  useEffect(() => {
+    if (items.length === 0) return;
+    const slugs = items.map((i) => i.slug);
+    slugs.forEach((slug) => {
+      fetch(`/api/products/${slug}`, { credentials: 'include' })
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.success && d.product.status && d.product.status !== 'AVAILABLE') {
+            setUnavailableSlugs((prev) => new Set(prev).add(slug));
+            dispatch(updateItemStatus({ slug, status: d.product.status }));
+          }
+        })
+        .catch(() => {});
+    });
+  }, [items.length]);
 
   if (items.length === 0) {
     return (
@@ -69,6 +87,11 @@ export default function CartPage() {
                   <Link to={`/products/${item.slug}`} className="text-[0.75rem] font-sans font-medium text-[#1A1A1A] hover:text-[#6B6B6B] transition line-clamp-1">
                     {item.name}
                   </Link>
+                  {unavailableSlugs.has(item.slug) && (
+                    <span className="inline-flex items-center gap-1 mt-1 text-[0.5rem] bg-red-50 text-red-600 px-1.5 py-0.5 rounded-full font-semibold">
+                      <i className="fas fa-exclamation-circle" /> Currently unavailable
+                    </span>
+                  )}
                   <div className="flex items-center gap-2 mt-1">
                     <span className="text-[0.85rem] font-sans font-medium text-[#1A1A1A]">₹{item.price.toLocaleString()}</span>
                     <span className="text-[0.6rem] text-[#B8B4AD] line-through">₹{item.originalPrice.toLocaleString()}</span>
@@ -78,7 +101,7 @@ export default function CartPage() {
                       <button onClick={() => dispatch(updateQuantity({ slug: item.slug, qty: item.quantity - 1 }))} disabled={item.quantity <= 1}
                         className="w-7 h-7 flex items-center justify-center text-xs text-[#1A1A1A] hover:bg-[#F0EFEC] transition rounded-l-[8px] disabled:opacity-30">−</button>
                       <span className="w-8 text-center text-[0.75rem] font-medium text-[#1A1A1A] border-x border-[#D4D0C8] h-7 flex items-center justify-center">{item.quantity}</span>
-                      <button onClick={() => dispatch(updateQuantity({ slug: item.slug, qty: item.quantity + 1 }))} disabled={item.quantity >= item.maxQuantity}
+                      <button onClick={() => dispatch(updateQuantity({ slug: item.slug, qty: item.quantity + 1 }))} disabled={item.quantity >= item.maxQuantity || unavailableSlugs.has(item.slug)}
                         className="w-7 h-7 flex items-center justify-center text-xs text-[#1A1A1A] hover:bg-[#F0EFEC] transition rounded-r-[8px] disabled:opacity-30">+</button>
                     </div>
                     <div className="flex items-center gap-3">
@@ -116,9 +139,16 @@ export default function CartPage() {
                   <span>₹{subtotal.toLocaleString()}</span>
                 </div>
               </div>
+              {unavailableSlugs.size > 0 && (
+                <div className="mt-3 text-[0.65rem] text-red-600 bg-red-50 p-2.5 rounded-lg text-center font-medium">
+                  <i className="fas fa-exclamation-circle mr-1" /> Some items are unavailable. Remove them to proceed.
+                </div>
+              )}
               <Link
                 to={`/checkout?items=${encodeURIComponent(items.map(i => `${i.slug}:${i.quantity}`).join(","))}`}
-                className="mt-5 w-full bg-[#1A1A1A] text-white text-sm font-sans font-medium py-3.5 px-6 rounded-[10px] hover:bg-[#333] transition block text-center"
+                className={`mt-3 w-full bg-[#1A1A1A] text-white text-sm font-sans font-medium py-3.5 px-6 rounded-[10px] transition block text-center ${
+                  unavailableSlugs.size > 0 ? 'opacity-40 pointer-events-none' : 'hover:bg-[#333]'
+                }`}
               >
                 Proceed to Checkout
               </Link>

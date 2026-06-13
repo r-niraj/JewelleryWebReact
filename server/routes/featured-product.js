@@ -3,7 +3,7 @@ const prisma = require('../lib/prisma');
 module.exports = async function handler(req, res) {
   try {
     const product = await prisma.product.findFirst({
-      where: { isFeatured: true, isActive: true },
+      where: { isFeatured: true, isActive: true, status: 'AVAILABLE' },
       include: {
         images: { orderBy: [{ isPrimary: 'desc' }, { displayOrder: 'asc' }] },
       },

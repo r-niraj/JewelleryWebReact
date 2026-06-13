@@ -32,6 +32,7 @@ const cartSlice = createSlice({
   reducers: {
     addItem(state, action) {
       const newItem = action.payload;
+      if (newItem.status && newItem.status !== 'AVAILABLE') return;
       const existing = state.items.find((i) => i.slug === newItem.slug);
       if (existing) {
         existing.quantity = Math.min(existing.maxQuantity, existing.quantity + (newItem.quantity || 1));
@@ -41,6 +42,12 @@ const cartSlice = createSlice({
           quantity: Math.min(newItem.maxQuantity, newItem.quantity || 1),
         });
       }
+      saveCart(state.items);
+    },
+    updateItemStatus(state, action) {
+      const { slug, status } = action.payload;
+      const item = state.items.find((i) => i.slug === slug);
+      if (item) item.status = status;
       saveCart(state.items);
     },
     updateQuantity(state, action) {
@@ -62,7 +69,7 @@ const cartSlice = createSlice({
   },
 });
 
-export const { addItem, updateQuantity, removeItem, clearCart } = cartSlice.actions;
+export const { addItem, updateQuantity, removeItem, clearCart, updateItemStatus } = cartSlice.actions;
 
 export const selectCartItems = (state) => state.cart.items;
 export const selectCartItemCount = (state) => state.cart.items.reduce((sum, i) => sum + i.quantity, 0);

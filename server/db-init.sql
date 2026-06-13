@@ -35,6 +35,10 @@ CREATE TABLE IF NOT EXISTS `products` (
   `discount_percentage` INT,
   `sku` VARCHAR(100),
   `stock_quantity` INT DEFAULT 0,
+  `status` ENUM('AVAILABLE','OUT_OF_STOCK','TEMPORARILY_UNAVAILABLE','DISCONTINUED') NOT NULL DEFAULT 'AVAILABLE',
+  `availability_updated_at` DATETIME NULL,
+  `expected_restock_date` DATE NULL,
+  `unavailable_reason` VARCHAR(500) NULL,
   `category` VARCHAR(100),
   `details_materials` TEXT,
   `shipping_returns` TEXT,
@@ -46,7 +50,8 @@ CREATE TABLE IF NOT EXISTS `products` (
   PRIMARY KEY (`id`),
   INDEX (`is_active`),
   INDEX (`is_featured`),
-  INDEX (`category`)
+  INDEX (`category`),
+  INDEX (`status`)
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS `product_images` (

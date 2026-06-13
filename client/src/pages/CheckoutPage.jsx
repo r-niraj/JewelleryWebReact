@@ -129,6 +129,19 @@ function CheckoutForm() {
     setApiError("");
     if (!validate()) return;
     if (checkoutItems.length === 0) { setApiError("No items to order"); return; }
+
+    for (const item of checkoutItems) {
+      try {
+        const res = await fetch(`/api/products/${item.slug}`, { credentials: 'include' });
+        const data = await res.json();
+        if (data.success && data.product.status && data.product.status !== 'AVAILABLE') {
+          setApiError(`"${item.name}" is currently unavailable and cannot be ordered.`);
+          setLoading(false);
+          return;
+        }
+      } catch {}
+    }
+
     setLoading(true);
     try {
       let fullAddress = form.landmark ? `${form.address.trim()}, ${form.landmark.trim()}` : form.address.trim();

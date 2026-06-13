@@ -38,15 +38,21 @@ module.exports = async function handler(req, res) {
         const resolvedItems = await Promise.all(
           itemsArray.map(async (item) => {
             const product = item.slug
-              ? await tx.product.findUnique({ where: { slug: item.slug, isActive: true }, include: { images: { take: 1, orderBy: { displayOrder: 'asc' } } } })
+              ? await tx.product.findUnique({ where: { slug: item.slug }, include: { images: { take: 1, orderBy: { displayOrder: 'asc' } } } })
               : null;
+            if (!product) {
+              throw new Error(`Product "${item.slug}" not found`);
+            }
+            if (product.status !== 'AVAILABLE') {
+              throw new Error(`"${product.name}" is currently unavailable and cannot be ordered`);
+            }
             const qty = Math.max(1, Math.min(10, parseInt(item.quantity, 10) || 1));
-            const unitPrice = product ? Number(product.price) : 0;
+            const unitPrice = Number(product.price);
             const totalPrice = qty * unitPrice;
             totalAmount += totalPrice;
             return {
-              productId: product?.id || null,
-              productName: product?.name || item.name || 'Premium Crystal Necklace',
+              productId: product.id,
+              productName: product.name,
               productImage: product?.images?.[0]?.imageUrl || null,
               quantity: qty,
               unitPrice,
@@ -92,9 +98,13 @@ module.exports = async function handler(req, res) {
         const qty = Math.max(1, Math.min(10, parseInt(quantity, 10) || 1));
 
         if (productSlug) {
-          resolvedProduct = await tx.product.findUnique({ where: { slug: productSlug, isActive: true } });
+          resolvedProduct = await tx.product.findUnique({ where: { slug: productSlug } });
         } else if (productId) {
-          resolvedProduct = await tx.product.findUnique({ where: { id: Number(productId), isActive: true } });
+          resolvedProduct = await tx.product.findUnique({ where: { id: Number(productId) } });
+        }
+
+        if (resolvedProduct && resolvedProduct.status !== 'AVAILABLE') {
+          return res.status(400).json({ success: false, error: `"${resolvedProduct.name}" is currently unavailable and cannot be ordered` });
         }
 
         const productName = resolvedProduct?.name || 'Premium Crystal Necklace';

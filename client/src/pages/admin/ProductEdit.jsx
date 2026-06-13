@@ -23,6 +23,9 @@ export default function ProductEdit() {
     careInstructions: '',
     isFeatured: false,
     isActive: true,
+    status: 'AVAILABLE',
+    expectedRestockDate: '',
+    unavailableReason: '',
   });
   const [images, setImages] = useState([]);
   const [videos, setVideos] = useState([]);
@@ -51,6 +54,9 @@ export default function ProductEdit() {
             careInstructions: p.careInstructions || '',
             isFeatured: p.isFeatured,
             isActive: p.isActive,
+            status: p.status || 'AVAILABLE',
+            expectedRestockDate: p.expectedRestockDate || '',
+            unavailableReason: p.unavailableReason || '',
           });
           setImages(p.images || []);
           setVideos(p.videos || []);
@@ -70,6 +76,8 @@ export default function ProductEdit() {
         price: Number(form.price),
         originalPrice: Number(form.originalPrice),
         stockQuantity: Number(form.stockQuantity),
+        expectedRestockDate: form.expectedRestockDate || null,
+        unavailableReason: form.unavailableReason || null,
       };
       delete payload.slug;
       const url = isNew ? '/api/products' : `/api/products/${slug}`;
@@ -298,12 +306,32 @@ export default function ProductEdit() {
 
         <div className="space-y-4">
           <div className="bg-white rounded-[16px] p-5 border border-gold-soft/10">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted mb-4">Status</h2>
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted mb-4">Status & Inventory</h2>
+            <div className="mb-3">
+              <label className="block text-xs font-semibold text-heading mb-1">Status</label>
+              <select value={form.status} onChange={(e) => update('status', e.target.value)}
+                className="w-full px-3 py-2.5 border-2 border-gold-soft/30 rounded-lg text-sm outline-none bg-ivory focus:bg-white focus:border-emerald-deep transition">
+                <option value="AVAILABLE">Available</option>
+                <option value="OUT_OF_STOCK">Out of Stock</option>
+                <option value="TEMPORARILY_UNAVAILABLE">Temporarily Unavailable</option>
+                <option value="DISCONTINUED">Discontinued</option>
+              </select>
+            </div>
+            {form.status !== 'AVAILABLE' && (
+              <>
+                <div className="mb-3">
+                  <label className="block text-xs font-semibold text-heading mb-1">Expected Restock Date</label>
+                  <input type="date" value={form.expectedRestockDate} onChange={(e) => update('expectedRestockDate', e.target.value)}
+                    className="w-full px-3 py-2.5 border-2 border-gold-soft/30 rounded-lg text-sm outline-none bg-ivory focus:bg-white focus:border-emerald-deep transition" />
+                </div>
+                <div className="mb-3">
+                  <label className="block text-xs font-semibold text-heading mb-1">Unavailable Reason <span className="text-muted font-normal">(optional)</span></label>
+                  <input value={form.unavailableReason} onChange={(e) => update('unavailableReason', e.target.value)} placeholder="e.g. Awaiting supplier restock"
+                    className="w-full px-3 py-2.5 border-2 border-gold-soft/30 rounded-lg text-sm outline-none bg-ivory focus:bg-white focus:border-emerald-deep transition" />
+                </div>
+              </>
+            )}
             <label className="flex items-center gap-2 cursor-pointer mb-3">
-              <input type="checkbox" checked={form.isActive} onChange={(e) => update('isActive', e.target.checked)} className="accent-emerald-deep" />
-              <span className="text-xs text-body">Active (visible on store)</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" checked={form.isFeatured} onChange={(e) => update('isFeatured', e.target.checked)} className="accent-amber-500" />
               <span className="text-xs text-body">Featured (show on homepage)</span>
             </label>

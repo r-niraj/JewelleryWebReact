@@ -39,8 +39,8 @@ async function main() {
 
   for (const p of products) {
     const [r] = await db.pool.execute(
-      `INSERT INTO products (name, slug, short_description, full_description, price, original_price, discount_percentage, sku, stock_quantity, category, is_featured)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO products (name, slug, short_description, full_description, price, original_price, discount_percentage, sku, stock_quantity, status, category, is_featured)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'AVAILABLE', ?, ?)`,
       [p.name, p.slug, p.short, p.full, p.price, p.orig, p.disc, p.sku, p.stock, p.cat, p.featured]
     );
     const productId = r.insertId;

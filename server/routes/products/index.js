@@ -11,12 +11,14 @@ async function getHandler(req, res) {
     const featured = req.query.featured === 'true';
     const category = req.query.category;
     const search = req.query.search;
+    const statusFilter = req.query.status;
     const page = Math.max(1, parseInt(req.query.page || '1'));
     const limit = Math.min(50, Math.max(1, parseInt(req.query.limit || '20')));
     const skip = (page - 1) * limit;
 
     const where = {};
     if (req.query.all !== 'true') where.isActive = true;
+    if (statusFilter) where.status = statusFilter;
     if (featured) where.isFeatured = true;
     if (category) where.category = category;
     if (search) {
@@ -55,7 +57,7 @@ async function getHandler(req, res) {
 
 async function postHandler(req, res) {
   try {
-    const { name, slug, shortDescription, fullDescription, price, originalPrice, sku, stockQuantity, category, isFeatured, detailsMaterials, shippingReturns, careInstructions } = req.body;
+    const { name, slug, shortDescription, fullDescription, price, originalPrice, sku, stockQuantity, category, isFeatured, detailsMaterials, shippingReturns, careInstructions, status, expectedRestockDate, unavailableReason } = req.body;
 
     if (!name || !slug || !price) {
       return res.status(400).json({ success: false, error: 'name, slug, and price are required' });
@@ -80,6 +82,10 @@ async function postHandler(req, res) {
         discountPercentage: discountPercentage > 0 ? discountPercentage : 0,
         sku: sku || '',
         stockQuantity: stockQuantity || 0,
+        status: status || 'AVAILABLE',
+        availabilityUpdatedAt: new Date(),
+        expectedRestockDate: expectedRestockDate || null,
+        unavailableReason: unavailableReason || null,
         category: category || null,
         detailsMaterials: detailsMaterials || null,
         shippingReturns: shippingReturns || null,

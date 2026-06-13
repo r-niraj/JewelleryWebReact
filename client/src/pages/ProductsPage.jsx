@@ -85,16 +85,18 @@ export default function ProductsPage() {
             {products.map((product, i) => {
               const primaryImage = product.images?.[0];
               const discount = Math.round((1 - Number(product.price) / Number(product.originalPrice)) * 100);
+              const isUnavailable = product.status && product.status !== 'AVAILABLE';
+              const statusLabel = product.status === 'OUT_OF_STOCK' ? 'Out of Stock' : product.status === 'TEMPORARILY_UNAVAILABLE' ? 'Currently Unavailable' : '';
               return (
                 <motion.div
                   key={product.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.06 }}
-                  className="group bg-white rounded-[16px] overflow-hidden border border-gold-soft/10 hover:shadow-[0_8px_30px_rgba(11,58,66,0.08)] transition-all duration-300 hover:-translate-y-1"
+                  className={`group bg-white rounded-[16px] overflow-hidden border border-gold-soft/10 hover:shadow-[0_8px_30px_rgba(11,58,66,0.08)] transition-all duration-300 hover:-translate-y-1 ${isUnavailable ? 'opacity-80' : ''}`}
                 >
                   <Link to={`/products/${product.slug}`} className="block">
-                    <div className="aspect-square overflow-hidden bg-champagne relative">
+                    <div className={`aspect-square overflow-hidden bg-champagne relative ${isUnavailable ? 'saturate-[0.3]' : ''}`}>
                       <img
                         src={primaryImage?.imageUrl || "/images/necklace-1.jpeg"}
                         alt={`${product.name} - Premium Fashion Jewelry`}
@@ -104,8 +106,15 @@ export default function ProductsPage() {
                       {discount > 0 && (
                         <span className="absolute top-3 left-3 bg-[#1A1A1A]/80 text-white text-[0.45rem] font-medium px-2.5 py-0.5">{discount}% off</span>
                       )}
-                      {product.isFeatured && (
+                      {product.isFeatured && !isUnavailable && (
                         <span className="absolute top-3 right-3 bg-amber-400/90 text-white text-[0.5rem] font-bold px-2 py-0.5 rounded-full"><i className="fas fa-star mr-0.5" /> Featured</span>
+                      )}
+                      {isUnavailable && (
+                        <span className={`absolute top-3 right-3 backdrop-blur-sm rounded-full px-2.5 py-1 shadow-sm flex items-center ${
+                          product.status === 'OUT_OF_STOCK' ? 'bg-red-50/90 text-red-600' : 'bg-amber-50/90 text-amber-700'
+                        }`}>
+                          <span className="text-[0.45rem] font-semibold uppercase tracking-wider leading-none">{statusLabel}</span>
+                        </span>
                       )}
                     </div>
                   </Link>
@@ -122,28 +131,41 @@ export default function ProductsPage() {
                       <span className="text-[0.45rem] text-muted">4.8/5</span>
                     </div>
                     <div className="flex gap-1.5">
-                      <button
-                        onClick={() => {
-                          const img = product.images?.[0];
-                          dispatch(addItem({
-                            productId: product.id,
-                            slug: product.slug,
-                            name: product.name,
-                            price: Number(product.price),
-                            originalPrice: Number(product.originalPrice),
-                            image: img?.imageUrl || "",
-                            maxQuantity: product.stockQuantity || 10,
-                          }));
-                          setAddedSlugs((prev) => new Set(prev).add(product.slug));
-                          setTimeout(() => setAddedSlugs((prev) => { const n = new Set(prev); n.delete(product.slug); return n; }), 1500);
-                        }}
-                        className="flex-[2] flex items-center justify-center py-1.5 sm:py-2 px-2 bg-emerald-deep text-white rounded-[6px] text-[0.5rem] sm:text-[0.55rem] font-sans font-semibold tracking-wide hover:bg-teal-luxury transition whitespace-nowrap">
-                        {addedSlugs.has(product.slug) ? <><i className="fas fa-check mr-0.5" /> Added</> : "Add to Cart"}
-                      </button>
-                      <Link to={`/checkout?product=${product.slug}`}
-                        className="flex-1 flex items-center justify-center py-1.5 sm:py-2 px-2 bg-[#1A1A1A] text-white rounded-[6px] text-[0.5rem] sm:text-[0.55rem] font-sans font-semibold tracking-wide hover:bg-[#333] transition whitespace-nowrap">
-                        Buy Now
-                      </Link>
+                      {isUnavailable ? (
+                        <span className="flex-[2] flex items-center justify-center py-1.5 sm:py-2 px-2 bg-gray-200 text-gray-500 rounded-[6px] text-[0.5rem] sm:text-[0.55rem] font-sans font-semibold tracking-wide whitespace-nowrap">
+                          {statusLabel}
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            const img = product.images?.[0];
+                            dispatch(addItem({
+                              productId: product.id,
+                              slug: product.slug,
+                              name: product.name,
+                              price: Number(product.price),
+                              originalPrice: Number(product.originalPrice),
+                              image: img?.imageUrl || "",
+                              maxQuantity: product.stockQuantity || 10,
+                              status: product.status || 'AVAILABLE',
+                            }));
+                            setAddedSlugs((prev) => new Set(prev).add(product.slug));
+                            setTimeout(() => setAddedSlugs((prev) => { const n = new Set(prev); n.delete(product.slug); return n; }), 1500);
+                          }}
+                          className="flex-[2] flex items-center justify-center py-1.5 sm:py-2 px-2 bg-emerald-deep text-white rounded-[6px] text-[0.5rem] sm:text-[0.55rem] font-sans font-semibold tracking-wide hover:bg-teal-luxury transition whitespace-nowrap">
+                          {addedSlugs.has(product.slug) ? <><i className="fas fa-check mr-0.5" /> Added</> : "Add to Cart"}
+                        </button>
+                      )}
+                      {isUnavailable ? (
+                        <span className="flex-1 flex items-center justify-center py-1.5 sm:py-2 px-2 bg-gray-100 text-gray-400 rounded-[6px] text-[0.5rem] sm:text-[0.55rem] font-sans font-semibold tracking-wide whitespace-nowrap">
+                          Unavailable
+                        </span>
+                      ) : (
+                        <Link to={`/checkout?product=${product.slug}`}
+                          className="flex-1 flex items-center justify-center py-1.5 sm:py-2 px-2 bg-[#1A1A1A] text-white rounded-[6px] text-[0.5rem] sm:text-[0.55rem] font-sans font-semibold tracking-wide hover:bg-[#333] transition whitespace-nowrap">
+                          Buy Now
+                        </Link>
+                      )}
                     </div>
                   </div>
                 </motion.div>
