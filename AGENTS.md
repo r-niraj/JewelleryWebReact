@@ -24,13 +24,12 @@ NODE_ENV=production
 ```
 
 ## File Mapping (Repo → cPanel)
-Git repo has files in `server/` but on cPanel they're directly in `jewellery/`. After pull, copy:
+Git repo has files in `server/` but on cPanel they're directly in `jewellery/`. Use `deploy.sh` (in repo root) for safe one-command deployment:
 - `server/server.js` → `jewellery/server.js`
 - `server/lib/*` → `jewellery/lib/*`
 - `server/routes/**/*` → `jewellery/routes/**/*`
 - `server/seed.js` → `jewellery/seed.js`
-- `server/public/assets/*` → `jewellery/public/assets/*`
-- `server/public/index.html` → `jewellery/public/index.html`
+- `server/public/*` → `jewellery/public/*`
 - `server/package.json` → `jewellery/package.json`
 
 ## Common Commands
@@ -46,9 +45,9 @@ git fetch origin && git reset --hard origin/main && npm install
 # Seed
 DATABASE_URL="mysql://shopsas2_rajnish:Tollfree%4012@localhost/shopsas2_store_db" node seed.js
 
-# After pull
-cd jewellery && git pull origin main
-# Copy files that changed (see mapping above)
+# Standard deploy (recommended)
+cd /home2/shopsas2/jewellery && git pull origin main && bash deploy.sh
+# Then: cPanel → Setup Node.js App → Stop → Start
 
 # Build frontend locally
 cd client && npm run build
