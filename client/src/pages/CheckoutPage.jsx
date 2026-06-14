@@ -3,11 +3,13 @@ import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useSelector, useDispatch } from 'react-redux'
 import { clearCart, selectCartItems } from '../store/slices/cartSlice'
+import { useAnalytics } from '../analytics/useAnalytics';
 
 function CheckoutForm() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const dispatch = useDispatch();
+  const { trackEvent, trackProductInteraction, getAttribution } = useAnalytics();
   const cartItems = useSelector(selectCartItems);
   const productSlug = searchParams.get("product") || "";
   const itemsParam = searchParams.get("items") || "";
@@ -166,6 +168,10 @@ function CheckoutForm() {
       if (!data.success) throw new Error(data.error || "Failed to place order");
       setSuccess(data);
       dispatch(clearCart());
+      for (const item of checkoutItems) {
+        trackProductInteraction(item.productId || 0, item.name, '', 'purchase', window.location.pathname, { orderNumber: data.orderNumber });
+      }
+      trackEvent('checkout', 'checkout', 'completed', data.orderNumber, String(data.totalAmount));
     } catch (err) {
       setApiError(err.message);
     } finally {

@@ -31,4 +31,14 @@ async function getConnection() {
   return pool.getConnection();
 }
 
-module.exports = { pool, query, getConnection };
+function getAnalyticsPool() {
+  const p = mysql.createPool({
+    uri: process.env.DATABASE_URL,
+    waitForConnections: true,
+    connectionLimit: 1,
+    queueLimit: 0,
+  });
+  return p;
+}
+
+module.exports = { pool, query, getConnection, getAnalyticsPool };

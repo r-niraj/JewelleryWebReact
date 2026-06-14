@@ -6,6 +6,7 @@ import { addItem, selectCartItemCount } from '../store/slices/cartSlice'
 import JsonLd from '../components/JsonLd';
 import { breadcrumbSchema, faqSchema } from '../lib/schema';
 import { SITE_URL, SITE_NAME } from '../lib/seo';
+import { useAnalytics } from '../analytics/useAnalytics';
 
 const COLLECTION_FAQS = [
   { q: "What materials are used in your jewelry?", a: "Our pieces feature 18k gold-plated sterling silver, brilliant-cut crystals, and tarnish-resistant coatings for lasting shine." },
@@ -18,6 +19,7 @@ const COLLECTION_FAQS = [
 import Logo from '../components/Logo';
 export default function ProductsPage() {
   const dispatch = useDispatch();
+  const { trackProductInteraction } = useAnalytics();
   const itemCount = useSelector(selectCartItemCount);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -138,6 +140,7 @@ export default function ProductsPage() {
                       ) : (
                         <button
                           onClick={() => {
+                            trackProductInteraction(product.id, product.name, product.category, 'add_to_cart', window.location.pathname);
                             const img = product.images?.[0];
                             dispatch(addItem({
                               productId: product.id,
@@ -161,7 +164,7 @@ export default function ProductsPage() {
                           Unavailable
                         </span>
                       ) : (
-                        <Link to={`/checkout?product=${product.slug}`}
+                        <Link to={`/checkout?product=${product.slug}`} onClick={() => trackProductInteraction(product.id, product.name, product.category, 'buy_now', window.location.pathname)}
                           className="flex-1 flex items-center justify-center py-1.5 sm:py-2 px-2 bg-[#1A1A1A] text-white rounded-[6px] text-[0.5rem] sm:text-[0.55rem] font-sans font-semibold tracking-wide hover:bg-[#333] transition whitespace-nowrap">
                           Buy Now
                         </Link>

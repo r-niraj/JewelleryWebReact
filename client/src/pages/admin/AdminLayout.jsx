@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { href: '/admin/orders', icon: 'fa-shopping-bag', label: 'Orders' },
   { href: '/admin/products', icon: 'fa-box', label: 'Products' },
   { href: '/admin/customers', icon: 'fa-users', label: 'Customers' },
+  { href: '/admin/analytics', icon: 'fa-chart-line', label: 'Analytics' },
   { href: '/admin/content', icon: 'fa-edit', label: 'Content' },
   { href: '/admin/hero-manager', icon: 'fa-camera', label: 'Hero Manager' },
   { href: '/admin/media', icon: 'fa-images', label: 'Media' },
@@ -22,6 +23,19 @@ const CONTENT_DROPDOWN = [
   { href: '/admin/content/benefits', label: 'Benefits' },
 ];
 
+const ANALYTICS_DROPDOWN = [
+  { href: '/admin/analytics', icon: 'fa-chart-pie', label: 'Overview' },
+  { href: '/admin/analytics/visitors', icon: 'fa-users', label: 'Visitors' },
+  { href: '/admin/analytics/traffic-sources', icon: 'fa-share-alt', label: 'Traffic Sources' },
+  { href: '/admin/analytics/campaigns', icon: 'fa-bullhorn', label: 'Campaign Analytics' },
+  { href: '/admin/analytics/products', icon: 'fa-box', label: 'Product Analytics' },
+  { href: '/admin/analytics/journey', icon: 'fa-route', label: 'Customer Journey' },
+  { href: '/admin/analytics/geography', icon: 'fa-globe', label: 'Geography' },
+  { href: '/admin/analytics/live', icon: 'fa-bolt', label: 'Live Visitors' },
+  { href: '/admin/analytics/events', icon: 'fa-list', label: 'Event Explorer' },
+  { href: '/admin/analytics/funnel', icon: 'fa-filter', label: 'Conversion Funnel' },
+];
+
 export default function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -30,6 +44,7 @@ export default function AdminLayout() {
   const loading = useSelector(selectAdminLoading);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [contentDropdownOpen, setContentDropdownOpen] = useState(false);
+  const [analyticsDropdownOpen, setAnalyticsDropdownOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !admin) {
@@ -67,6 +82,38 @@ export default function AdminLayout() {
         <nav className="flex flex-col gap-1 px-3 flex-1">
           {NAV_ITEMS.map((item) => {
             const active = isActive(item.href);
+            if (item.label === 'Analytics') {
+              return (
+                <div key={item.href} className="relative">
+                  <button
+                    onClick={() => setAnalyticsDropdownOpen(!analyticsDropdownOpen)}
+                    className={`flex items-center gap-2.5 w-full px-3 py-2.5 rounded-lg text-sm font-medium transition ${
+                      active ? 'bg-gold-soft/15 text-gold-soft' : 'text-white/60 hover:bg-white/5 hover:text-white'
+                    }`}
+                  >
+                    <i className={`fas ${item.icon} w-[18px]`} />
+                    {item.label}
+                    <i className={`fas fa-chevron-down ml-auto text-[0.6rem] transition ${analyticsDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  {analyticsDropdownOpen && (
+                    <div className="ml-7 mt-1 flex flex-col gap-0.5">
+                      {ANALYTICS_DROPDOWN.map((sub) => (
+                        <Link
+                          key={sub.href}
+                          to={sub.href}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+                            location.pathname === sub.href ? 'bg-gold-soft/15 text-gold-soft' : 'text-white/50 hover:bg-white/5 hover:text-white'
+                          }`}
+                        >
+                          <i className={`fas ${sub.icon} w-[14px] mr-1.5`} />
+                          {sub.label}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            }
             if (item.label === 'Content') {
               return (
                 <div key={item.href} className="relative">

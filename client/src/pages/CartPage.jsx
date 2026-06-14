@@ -3,10 +3,12 @@ import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from 'react-redux'
 import { updateQuantity, removeItem, clearCart, updateItemStatus, selectCartItems, selectCartItemCount, selectCartSubtotal, selectCartSavings } from '../store/slices/cartSlice'
 import { motion } from "framer-motion";
+import { useAnalytics } from '../analytics/useAnalytics';
 
 import Logo from '../components/Logo';
 export default function CartPage() {
   const dispatch = useDispatch();
+  const { trackEvent, trackProductInteraction } = useAnalytics();
   const items = useSelector(selectCartItems);
   const itemCount = useSelector(selectCartItemCount);
   const subtotal = useSelector(selectCartSubtotal);
@@ -63,7 +65,7 @@ export default function CartPage() {
             <h1 className="font-serif text-2xl font-medium text-[#1A1A1A] tracking-tight">Shopping Bag</h1>
             <p className="text-[0.7rem] text-[#6B6B6B] mt-0.5">{itemCount} {itemCount === 1 ? "item" : "items"}</p>
           </div>
-          <button onClick={() => dispatch(clearCart())} className="text-[0.65rem] text-[#B8B4AD] hover:text-red-500 transition">
+          <button onClick={() => { trackEvent('cart', 'cart', 'clear'); dispatch(clearCart()); }} className="text-[0.65rem] text-[#B8B4AD] hover:text-red-500 transition">
             <i className="fas fa-trash-alt mr-1" /> Clear All
           </button>
         </div>
@@ -106,7 +108,7 @@ export default function CartPage() {
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="text-[0.75rem] font-sans font-medium text-[#1A1A1A]">₹{(item.price * item.quantity).toLocaleString()}</span>
-                      <button onClick={() => dispatch(removeItem(item.slug))} className="text-[#B8B4AD] hover:text-red-500 transition text-xs">
+                      <button onClick={() => { trackProductInteraction(item.productId, item.name, '', 'remove_from_cart', window.location.pathname); dispatch(removeItem(item.slug)); }} className="text-[#B8B4AD] hover:text-red-500 transition text-xs">
                         <i className="fas fa-times" />
                       </button>
                     </div>

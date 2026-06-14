@@ -7,6 +7,7 @@ import JsonLd from '../components/JsonLd';
 import Logo from '../components/Logo';
 import { productSchema, breadcrumbSchema, faqSchema } from '../lib/schema';
 import { SITE_URL } from '../lib/seo';
+import { useAnalytics } from '../analytics/useAnalytics';
 
 const REVIEWS = [
   { name: "Priya S.", quote: "Received so many compliments. Looks far more expensive than its price. The packaging was gorgeous too!" },
@@ -48,6 +49,7 @@ const PRODUCT_FAQS = [
 export default function ProductDetailPage() {
   const navigate = useNavigate();
   const { slug } = useParams();
+  const { trackProductInteraction } = useAnalytics();
   const dispatch = useDispatch();
   const itemCount = useSelector(selectCartItemCount);
   const [product, setProduct] = useState(null);
@@ -66,9 +68,10 @@ export default function ProductDetailPage() {
       if (d.success) {
         setProduct(d.product);
         setRelated(d.related || []);
+        trackProductInteraction(d.product.id, d.product.name, d.product.category, 'view', window.location.pathname);
       }
     }).finally(() => setLoading(false));
-  }, [slug]);
+  }, [slug, trackProductInteraction]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -92,6 +95,7 @@ export default function ProductDetailPage() {
 
   const handleAddToCart = useCallback(() => {
     if (!product) return;
+    trackProductInteraction(product.id, product.name, product.category, 'add_to_cart', window.location.pathname);
     const primaryImage = product.images?.find((i) => i.isPrimary) || product.images?.[0];
     dispatch(addItem({
       productId: product.id,
@@ -106,10 +110,11 @@ export default function ProductDetailPage() {
     }));
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2000);
-  }, [product, qty, dispatch]);
+  }, [product, qty, dispatch, trackProductInteraction]);
 
   const handleBuyNow = useCallback(() => {
     if (!product) return;
+    trackProductInteraction(product.id, product.name, product.category, 'buy_now', window.location.pathname);
     const primaryImage = product.images?.find((i) => i.isPrimary) || product.images?.[0];
     dispatch(addItem({
       productId: product.id,
@@ -123,7 +128,7 @@ export default function ProductDetailPage() {
       status: product.status || 'AVAILABLE',
     }));
     navigate(`/checkout?product=${product.slug}&qty=${qty}`);
-  }, [product, qty, dispatch, navigate]);
+  }, [product, qty, dispatch, navigate, trackProductInteraction]);
 
   const handlePrevImage = () => {
     setSelectedGalleryIdx((prev) => (prev - 1 + galleryItems.length) % galleryItems.length);

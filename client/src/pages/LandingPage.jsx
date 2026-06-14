@@ -7,6 +7,7 @@ import JsonLd from '../components/JsonLd';
 import Logo from '../components/Logo';
 import { breadcrumbSchema, faqSchema } from '../lib/schema';
 import { SITE_URL } from '../lib/seo';
+import { useAnalytics } from '../analytics/useAnalytics';
 
 const REVIEWS = [
   { name: "Priya S.", location: "Delhi", text: "Received so many compliments. Looks far more expensive than its price. The packaging was gorgeous too!", img: "https://i.pravatar.cc/80?img=1" },
@@ -40,6 +41,7 @@ const FALLBACK_HERO_IMAGES = [
 export default function LandingPage() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { trackProductInteraction, trackEvent } = useAnalytics();
   const [viewerCount, setViewerCount] = useState(18);
   const [activeFaq, setActiveFaq] = useState(null);
   const [sticky, setSticky] = useState(false);
@@ -268,13 +270,16 @@ export default function LandingPage() {
 
   const handleOrderNow = useCallback(() => {
     if (!featuredProduct) {
+      trackEvent('cta', 'navigation', 'browse_collection', 'hero');
       navigate("/products");
       return;
     }
     if (featuredProduct.status && featuredProduct.status !== 'AVAILABLE') {
+      trackProductInteraction(featuredProduct.id, featuredProduct.name, featuredProduct.category, 'view', window.location.pathname);
       navigate(`/products/${featuredProduct.slug}`);
       return;
     }
+    trackProductInteraction(featuredProduct.id, featuredProduct.name, featuredProduct.category, 'buy_now', window.location.pathname);
     const primaryImage = featuredProduct.images?.find((i) => i.isPrimary) || featuredProduct.images?.[0];
     dispatch(addItem({
       productId: featuredProduct.id,
@@ -288,7 +293,7 @@ export default function LandingPage() {
       status: featuredProduct.status || 'AVAILABLE',
     }));
     navigate(`/checkout?product=${featuredProduct.slug}&qty=1`);
-  }, [featuredProduct, dispatch, navigate]);
+  }, [featuredProduct, dispatch, navigate, trackProductInteraction, trackEvent]);
 
   const heroPrice = featuredProduct ? Number(featuredProduct.price) : (Number(hero?.price) || 1299);
   const heroDiscountPrice = featuredProduct ? Number(featuredProduct.originalPrice) : (Number(hero?.discountPrice) || 2499);

@@ -92,6 +92,25 @@ app.post('/api/hero-media', authMiddleware, require('./routes/hero-media/index')
 app.put('/api/hero-media/:id', authMiddleware, require('./routes/hero-media/id'));
 app.delete('/api/hero-media/:id', authMiddleware, require('./routes/hero-media/id'));
 
+// Analytics tracking (public, rate-limited)
+app.use('/api/analytics/track', (req, res, next) => {
+  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress;
+  if (!req.app._analyticsCount) req.app._analyticsCount = {};
+  const key = `track_${ip}_${Math.floor(Date.now() / 60000)}`;
+  req.app._analyticsCount[key] = (req.app._analyticsCount[key] || 0) + 1;
+  if (req.app._analyticsCount[key] > 100) {
+    return res.status(429).json({ error: 'Too many requests' });
+  }
+  next();
+}, require('./routes/analytics/track'));
+
+// Analytics dashboard (auth required)
+app.get('/api/analytics/dashboard/:type', authMiddleware, require('./routes/analytics/dashboard'));
+
+// Analytics settings (public GET, auth PUT)
+app.get('/api/analytics/settings', require('./routes/analytics/settings'));
+app.put('/api/analytics/settings', authMiddleware, require('./routes/analytics/settings'));
+
 // Catch-all for SPA frontend
 app.get('*', (req, res) => {
   const indexPath = path.join(__dirname, 'public', 'index.html');

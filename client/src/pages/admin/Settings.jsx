@@ -5,6 +5,9 @@ export default function AdminSettings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const [analyticsSettings, setAnalyticsSettings] = useState({ analytics_enabled: 'true', ip_anonymization: 'true', retention_days: '0' });
+  const [analyticsSaving, setAnalyticsSaving] = useState(false);
+  const [analyticsMsg, setAnalyticsMsg] = useState('');
   const [pw, setPw] = useState({ current: '', newPass: '', confirm: '' });
   const [pwMsg, setPwMsg] = useState('');
   const [pwSaving, setPwSaving] = useState(false);
@@ -20,6 +23,33 @@ export default function AdminSettings() {
   };
 
   useEffect(() => { fetchSettings(); }, []);
+
+  const fetchAnalyticsSettings = async () => {
+    try {
+      const res = await fetch('/api/analytics/settings');
+      const data = await res.json();
+      if (data.success) setAnalyticsSettings(data.settings);
+    } catch {}
+  };
+
+  useEffect(() => { fetchAnalyticsSettings(); }, []);
+
+  const saveAnalyticsSetting = async (key, value) => {
+    setAnalyticsSaving(true);
+    setAnalyticsMsg('');
+    try {
+      setAnalyticsSettings((prev) => ({ ...prev, [key]: value }));
+      const res = await fetch('/api/analytics/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [key]: value }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error('Failed to save');
+      setAnalyticsMsg('Analytics settings saved');
+    } catch { setAnalyticsMsg('Failed to save analytics settings'); }
+    finally { setAnalyticsSaving(false); }
+  };
 
   const updateField = (key, value) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
@@ -99,6 +129,56 @@ export default function AdminSettings() {
               {f.help && <p className="text-[0.6rem] text-muted mt-1">{f.help}</p>}
             </div>
           ))}
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl shadow-[0_2px_8px_rgba(11,58,66,0.04)] border border-gold-soft/10 p-6 mt-6">
+        <h2 className="font-semibold text-heading text-sm mb-4">
+          <i className="fas fa-chart-line text-emerald-deep mr-2" />
+          Analytics Settings
+        </h2>
+        {analyticsMsg && (
+          <div className={`text-xs rounded-lg px-4 py-3 mb-4 ${analyticsMsg === 'Analytics settings saved' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+            {analyticsMsg}
+          </div>
+        )}
+        <div className="grid md:grid-cols-3 gap-5">
+          <div>
+            <label className="block text-xs font-semibold text-heading mb-1">Analytics Tracking</label>
+            <div className="flex items-center gap-3">
+              <button onClick={() => saveAnalyticsSetting('analytics_enabled', analyticsSettings.analytics_enabled === 'true' ? 'false' : 'true')}
+                className={`relative w-12 h-6 rounded-full transition ${analyticsSettings.analytics_enabled === 'true' ? 'bg-emerald-deep' : 'bg-gray-300'}`}>
+                <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition ${analyticsSettings.analytics_enabled === 'true' ? 'left-6' : 'left-0.5'}`} />
+              </button>
+              <span className="text-xs text-body">{analyticsSettings.analytics_enabled === 'true' ? 'Enabled' : 'Disabled'}</span>
+            </div>
+            <p className="text-[0.6rem] text-muted mt-1">All visitor tracking across the site</p>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-heading mb-1">IP Anonymization</label>
+            <div className="flex items-center gap-3">
+              <button onClick={() => saveAnalyticsSetting('ip_anonymization', analyticsSettings.ip_anonymization === 'true' ? 'false' : 'true')}
+                className={`relative w-12 h-6 rounded-full transition ${analyticsSettings.ip_anonymization === 'true' ? 'bg-emerald-deep' : 'bg-gray-300'}`}>
+                <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition ${analyticsSettings.ip_anonymization === 'true' ? 'left-6' : 'left-0.5'}`} />
+              </button>
+              <span className="text-xs text-body">{analyticsSettings.ip_anonymization === 'true' ? 'On' : 'Off'}</span>
+            </div>
+            <p className="text-[0.6rem] text-muted mt-1">Remove last octet of IP addresses</p>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-heading mb-1">Data Retention (days)</label>
+            <div className="flex gap-2">
+              <input type="number" value={analyticsSettings.retention_days || '0'}
+                onChange={(e) => setAnalyticsSettings((prev) => ({ ...prev, retention_days: e.target.value }))}
+                className="flex-1 px-3 py-2 border-2 border-gold-soft/30 rounded-lg text-xs outline-none bg-ivory focus:bg-white focus:border-emerald-deep transition" />
+              <button onClick={() => saveAnalyticsSetting('retention_days', analyticsSettings.retention_days)}
+                disabled={analyticsSaving}
+                className="px-3 py-2 bg-emerald-deep text-white rounded-lg text-xs font-semibold hover:bg-teal-luxury disabled:opacity-60 transition whitespace-nowrap">
+                Save
+              </button>
+            </div>
+            <p className="text-[0.6rem] text-muted mt-1">0 = keep indefinitely</p>
+          </div>
         </div>
       </div>
 
