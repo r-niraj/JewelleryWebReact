@@ -3,6 +3,9 @@
 # Usage: cd /home2/shopsas2/jewellery && git pull origin main && bash deploy.sh
 set -e
 
+# cPanel requires explicit Node.js path
+export PATH=/opt/alt/alt-nodejs22/root/usr/bin:$PATH
+
 echo "=== Step 1: Safety checks ==="
 # Remove stale nested jewellery/ dir if it somehow exists
 if [ -d "jewellery" ]; then
@@ -25,10 +28,16 @@ cp -rv server/prisma/. prisma/ 2>/dev/null || true
 cp -rv server/public/. public/
 
 echo ""
-echo "=== Step 3: Dependencies ==="
-echo "node_modules is managed by cPanel Node.js venv (symlink)"
-echo "If package.json changed, run: npm install"
-echo "(Otherwise skip — deps are auto-managed by cPanel)"
+echo "=== Step 3: Installing dependencies ==="
+# Check if package.json changed by comparing checksum
+OLD_HASH=$(md5sum package.json 2>/dev/null | cut -d' ' -f1 || echo "")
+NEW_HASH=$(md5sum server/package.json 2>/dev/null | cut -d' ' -f1 || echo "")
+if [ "$OLD_HASH" != "$NEW_HASH" ]; then
+  echo "package.json changed — running npm install"
+  npm install
+else
+  echo "package.json unchanged — skipping npm install"
+fi
 
 echo ""
 echo "=== Step 4: Verification ==="

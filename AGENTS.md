@@ -62,7 +62,7 @@ If changes aren't visible after deploy:
 
 ## Common Commands
 ```bash
-# Set Node.js path
+# Set Node.js path (REQUIRED before any node/npm command on cPanel)
 export PATH=/opt/alt/alt-nodejs22/root/usr/bin:$PATH
 
 # First time setup
@@ -72,11 +72,14 @@ git fetch origin && git reset --hard origin/main
 # Then: cPanel → Setup Node.js App → set root, app entry, .env, restart
 
 # Seed
+export PATH=/opt/alt/alt-nodejs22/root/usr/bin:$PATH
+cd /home2/shopsas2/jewellery
 DATABASE_URL="mysql://shopsas2_rajnish:Tollfree%4012@localhost/shopsas2_store_db" node seed.js
 
 # Standard deploy (recommended)
 cd /home2/shopsas2/jewellery && git pull origin main && bash deploy.sh
 # Then: cPanel → Setup Node.js App → Stop → Start
+# Note: deploy.sh sets PATH automatically, no need to export beforehand
 
 # Build frontend locally
 cd client && npm run build
@@ -84,6 +87,14 @@ cd client && npm run build
 
 # Restart in cPanel → Setup Node.js App → Stop then Start
 ```
+
+### Why PATH matters
+The default cPanel shell does NOT have Node.js in PATH. You must set:
+```bash
+export PATH=/opt/alt/alt-nodejs22/root/usr/bin:$PATH
+```
+Without it, `node` and `npm` will crash with `Aborted (core dumped)`. The `deploy.sh` script does this automatically.
+
 
 ## Frontend Build
 - `cd client && npm run build` outputs to `server/public/`
