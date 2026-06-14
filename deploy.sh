@@ -13,7 +13,8 @@ cp -rv server/public/. public/
 
 echo ""
 echo "=== Step 2: Installing dependencies ==="
-npm install --production
+rm -rf node_modules package-lock.json 2>/dev/null || true
+npm install --no-optional --ignore-scripts || npm install
 
 echo ""
 echo "=== Step 3: Verification ==="
