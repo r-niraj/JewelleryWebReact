@@ -32,6 +32,34 @@ Git repo has files in `server/` but on cPanel they're directly in `jewellery/`. 
 - `server/public/*` → `jewellery/public/*`
 - `server/package.json` → `jewellery/package.json`
 
+## cPanel Architecture Notes
+
+### node_modules is a symlink
+On cPanel, `node_modules` is a symlink managed by the Node.js venv:
+```
+node_modules -> /home2/shopsas2/nodevenv/jewellery/22/lib/node_modules
+```
+- **Do NOT** `rm -rf node_modules` — it will break the symlink
+- **Do NOT** run `npm install` unless `package.json` deps changed
+- If deps changed, run `npm install` (cPanel venv supports it)
+- If symlink is broken: delete the broken `node_modules` dir, then restart app in cPanel UI (cPanel recreates it)
+
+### stderr.log
+Error log at `/home2/shopsas2/jewellery/stderr.log` — check this if the app fails to start:
+```bash
+tail -50 stderr.log
+```
+
+### Troubleshooting checklist
+If changes aren't visible after deploy:
+1. **Restart** cPanel → Setup Node.js App → Stop → Start (not just refresh)
+2. **Hard refresh** browser (Ctrl+Shift+R) — static assets have 1yr cache
+3. **Check app root** in cPanel → Setup Node.js App → verify Application Root = `/home2/shopsas2/jewellery`
+4. **Check index.html** references the latest JS bundle: `grep -o 'main\.[a-z0-9]*\.js' public/index.html`
+5. **Check stderr.log** for startup errors: `tail -50 stderr.log`
+6. **Verify all routes** exist: `ls routes/*/`
+7. **Clean nested dir** if present: `rm -rf jewellery/` (rare git clone artifact)
+
 ## Common Commands
 ```bash
 # Set Node.js path
@@ -40,7 +68,8 @@ export PATH=/opt/alt/alt-nodejs22/root/usr/bin:$PATH
 # First time setup
 cd jewellery
 git init && git remote add origin https://github.com/r-niraj/JewelleryWebReact.git
-git fetch origin && git reset --hard origin/main && npm install
+git fetch origin && git reset --hard origin/main
+# Then: cPanel → Setup Node.js App → set root, app entry, .env, restart
 
 # Seed
 DATABASE_URL="mysql://shopsas2_rajnish:Tollfree%4012@localhost/shopsas2_store_db" node seed.js
@@ -59,3 +88,12 @@ cd client && npm run build
 ## Frontend Build
 - `cd client && npm run build` outputs to `server/public/`
 - Commit + push to deploy
+
+## Cleanup old assets (optional)
+After many deploys, old JS/CSS bundles accumulate in `public/assets/`:
+```bash
+# On cPanel, remove all except the currently referenced bundle
+cd /home2/shopsas2/jewellery/public/assets
+ls main.*.js | grep -v "$(grep -o 'main\.[a-z0-9]*\.js' ../index.html)" | xargs rm -f
+ls main.*.css | grep -v "$(grep -o 'main\.[a-z0-9]*\.css' ../index.html)" | xargs rm -f
+```
