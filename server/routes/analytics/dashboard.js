@@ -184,45 +184,84 @@ module.exports = async function handler(req, res) {
     }
 
     if (type === 'live') {
-      const active = await query(
+      const [activeRightNow] = await query(
         `SELECT COUNT(*) AS count FROM visitor_sessions
          WHERE is_active = TRUE AND session_start >= DATE_SUB(NOW(), INTERVAL 5 MINUTE)`
       );
-      const visitors = await query(
-        `SELECT vs.session_id, vs.ip_address, pv.page_url, v.device_type, v.browser, vl.country
+      const [activeToday] = await query(
+        `SELECT COUNT(*) AS count FROM visitor_sessions
+         WHERE is_active = TRUE AND session_start >= DATE_SUB(NOW(), INTERVAL 1 DAY)`
+      );
+      const sessions = await query(
+        `SELECT vs.session_id, vs.ip_address, vs.session_start,
+                v.anonymous_id, v.device_type, v.browser, v.visit_count,
+                pv.page_url AS current_page,
+                vl.country,
+                ca.utm_source,
+                TIMESTAMPDIFF(SECOND, vs.session_start, NOW()) AS duration_seconds
          FROM visitor_sessions vs
          LEFT JOIN visitors v ON vs.visitor_id = v.visitor_id
-         LEFT JOIN page_views pv ON pv.session_id = vs.session_id
+         LEFT JOIN page_views pv ON pv.session_id = vs.session_id AND pv.page_view_id = (
+           SELECT MIN(pv2.page_view_id) FROM page_views pv2 WHERE pv2.session_id = vs.session_id
+         )
          LEFT JOIN visitor_locations vl ON vl.visitor_id = v.visitor_id
+         LEFT JOIN campaign_attributions ca ON ca.session_id = vs.session_id
          WHERE vs.is_active = TRUE AND vs.session_start >= DATE_SUB(NOW(), INTERVAL 5 MINUTE)
          GROUP BY vs.session_id ORDER BY vs.session_start DESC LIMIT 50`
       );
-      return res.json({ success: true, count: active[0]?.count || 0, visitors });
+      return res.json({
+        success: true,
+        rightNow: activeRightNow?.count || 0,
+        activeToday: activeToday?.count || 0,
+        sessions: sessions.map((s) => ({
+          id: s.session_id,
+          anonymous_id: s.anonymous_id,
+          is_returning: (s.visit_count || 0) > 1,
+          current_page: s.current_page || '/',
+          utm_source: s.utm_source || 'Direct',
+          device_type: s.device_type || '—',
+          duration_seconds: s.duration_seconds || 0,
+          country: s.country,
+          browser: s.browser,
+        })),
+      });
     }
 
     if (type === 'events') {
       const { event_type, event_category, limit, offset } = req.query;
-      const where = ['timestamp >= DATE_SUB(NOW(), INTERVAL ? DAY)'];
+      const where = ['ve.timestamp >= DATE_SUB(NOW(), INTERVAL ? DAY)'];
       const params = [period];
-      if (event_type) { where.push('event_type = ?'); params.push(event_type); }
-      if (event_category) { where.push('event_category = ?'); params.push(event_category); }
+      if (event_type) { where.push('ve.event_type = ?'); params.push(event_type); }
+      if (event_category) { where.push('ve.event_category = ?'); params.push(event_category); }
       const lim = Math.min(parseInt(limit) || 100, 500);
       const off = parseInt(offset) || 0;
       const events = await query(
-        `SELECT * FROM visitor_events WHERE ${where.join(' AND ')} ORDER BY timestamp DESC LIMIT ? OFFSET ?`,
+        `SELECT ve.*, v.anonymous_id FROM visitor_events ve
+         LEFT JOIN visitors v ON ve.visitor_id = v.visitor_id
+         WHERE ${where.join(' AND ')} ORDER BY ve.timestamp DESC LIMIT ? OFFSET ?`,
         [...params, lim, off]
       );
       const [total] = await query(
-        `SELECT COUNT(*) AS count FROM visitor_events WHERE ${where.join(' AND ')}`,
+        `SELECT COUNT(*) AS count FROM visitor_events ve WHERE ${where.join(' AND ')}`,
         params
       );
       const types = await query(
-        `SELECT event_type, COUNT(*) AS count FROM visitor_events
-         WHERE timestamp >= DATE_SUB(NOW(), INTERVAL ? DAY)
-         GROUP BY event_type ORDER BY count DESC`,
+        `SELECT ve.event_type, COUNT(*) AS count FROM visitor_events ve
+         WHERE ve.timestamp >= DATE_SUB(NOW(), INTERVAL ? DAY)
+         GROUP BY ve.event_type ORDER BY count DESC`,
         [period]
       );
-      return res.json({ success: true, events, total: total.count, types });
+      return res.json({
+        success: true,
+        recent: events.map((e) => ({
+          event_name: e.event_type,
+          anonymous_id: e.anonymous_id,
+          event_data: e.metadata,
+          created_at: e.timestamp,
+        })),
+        total: total.count,
+        byName: types.map((t) => ({ event_name: t.event_type, count: t.count })),
+      });
     }
 
     return res.status(400).json({ error: 'Unknown dashboard type' });

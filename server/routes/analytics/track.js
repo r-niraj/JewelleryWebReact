@@ -46,7 +46,7 @@ async function getOrCreateSession(visitorId, ip, ua) {
   if (!visitorId) return null;
   const { query } = require('../../lib/db');
   const existing = await query(
-    'SELECT session_id FROM visitor_sessions WHERE visitor_id = ? AND is_active = TRUE ORDER BY session_start DESC LIMIT 1',
+    'SELECT session_id, session_start FROM visitor_sessions WHERE visitor_id = ? AND is_active = TRUE ORDER BY session_start DESC LIMIT 1',
     [visitorId]
   );
   if (existing.length > 0) {
