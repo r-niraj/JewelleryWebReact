@@ -93,7 +93,7 @@ app.put('/api/hero-media/:id', authMiddleware, require('./routes/hero-media/id')
 app.delete('/api/hero-media/:id', authMiddleware, require('./routes/hero-media/id'));
 
 // Analytics tracking (public, rate-limited)
-app.use('/api/analytics/track', (req, res, next) => {
+app.use('/api/analytics/track/:type', (req, res, next) => {
   const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress;
   if (!req.app._analyticsCount) req.app._analyticsCount = {};
   const key = `track_${ip}_${Math.floor(Date.now() / 60000)}`;

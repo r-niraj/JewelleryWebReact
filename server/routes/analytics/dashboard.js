@@ -64,7 +64,13 @@ module.exports = async function handler(req, res) {
          GROUP BY isp ORDER BY count DESC LIMIT 10`,
         [period]
       );
-      return res.json({ success: true, countries, states, cities, topISPs });
+      return res.json({
+        success: true,
+        byCountry: countries.map((c) => ({ country: c.country, visitors: c.count })),
+        byCity: cities.map((c) => ({ city: c.city, state: c.state, country: c.country, visitors: c.count })),
+        byState: states.map((s) => ({ state: s.state, country: s.country, visitors: s.count })),
+        topISPs: topISPs.map((i) => ({ isp: i.isp, visitors: i.count })),
+      });
     }
 
     if (type === 'marketing') {
