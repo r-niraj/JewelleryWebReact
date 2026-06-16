@@ -12,7 +12,7 @@ export default function ConversionFunnel() {
     setLoading(true);
     fetch(`/api/analytics/dashboard/funnel?period=${period}`, { credentials: 'include' })
       .then((r) => r.json()).then((d) => {
-        if (d.success) setFunnel(d.funnel || []);
+        if (d.success) setFunnel((d.funnel || []).map(f => ({ name: f.step, value: f.count })));
       }).finally(() => setLoading(false));
   }, [period]);
 
@@ -52,7 +52,7 @@ export default function ConversionFunnel() {
             <div className="mt-6 space-y-2">
               {funnel.map((step, idx) => {
                 const prevValue = idx > 0 ? funnel[idx - 1].value : total;
-                const drop = idx > 0 ? ((1 - step.value / prevValue) * 100).toFixed(1) : null;
+                const drop = idx > 0 && prevValue > 0 ? ((1 - step.value / prevValue) * 100).toFixed(1) : null;
                 const overallConversion = ((step.value / total) * 100).toFixed(1);
                 return (
                   <div key={idx} className="flex items-center gap-3">

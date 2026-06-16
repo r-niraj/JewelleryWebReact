@@ -78,7 +78,11 @@ DATABASE_URL="mysql://shopsas2_rajnish:Tollfree%4012@localhost/shopsas2_store_db
 
 # Standard deploy (recommended)
 cd /home2/shopsas2/jewellery && git pull origin main && bash deploy.sh
-# Then: cPanel → Setup Node.js App → Stop → Start
+
+# Lightweight deploy (use if git pull fails with "Resource temporarily unavailable")
+cd /home2/shopsas2/jewellery && git fetch --depth 1 origin main && git reset --hard origin/main && bash deploy.sh
+
+# Then (both methods): cPanel → Setup Node.js App → Stop → Start
 # Note: deploy.sh sets PATH automatically, no need to export beforehand
 
 # Build frontend locally

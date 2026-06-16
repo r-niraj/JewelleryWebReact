@@ -126,6 +126,22 @@ app.use((err, req, res, next) => {
   res.status(500).json({ success: false, error: 'Internal server error' });
 });
 
+// Auto-create analytics tables on startup
+const sqlPath = path.join(__dirname, 'db-analytics.sql');
+if (fs.existsSync(sqlPath)) {
+  const { query } = require('./lib/db');
+  const statements = fs.readFileSync(sqlPath, 'utf8')
+    .split(';')
+    .map(s => s.trim())
+    .filter(s => s.length > 0 && !s.startsWith('--'));
+  (async () => {
+    for (const stmt of statements) {
+      try { await query(stmt); } catch (e) { console.error('Analytics table init:', e.message); }
+    }
+    console.log('Analytics tables ready');
+  })();
+}
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

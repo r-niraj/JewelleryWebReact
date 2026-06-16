@@ -1,6 +1,8 @@
 #!/bin/bash
 # deploy.sh — safe deployment from repo server/ to jewellery/ root
-# Usage: cd /home2/shopsas2/jewellery && git pull origin main && bash deploy.sh
+# Usage:
+#   Standard: cd /home2/shopsas2/jewellery && git pull origin main && bash deploy.sh
+#   Lightweight (if git pull fails): cd /home2/shopsas2/jewellery && git fetch --depth 1 origin main && git reset --hard origin/main && bash deploy.sh
 set -e
 
 # cPanel requires explicit Node.js path
@@ -25,6 +27,7 @@ cp -v server/package.json .
 cp -rv server/lib/. lib/
 cp -rv server/routes/. routes/
 cp -rv server/prisma/. prisma/ 2>/dev/null || true
+cp -v server/db-analytics.sql .
 cp -rv server/public/. public/
 
 echo ""

@@ -50,7 +50,7 @@ export function AnalyticsProvider({ children }) {
 
   const send = useCallback((endpoint, data) => {
     try {
-      navigator.sendBeacon(endpoint, JSON.stringify(data));
+      navigator.sendBeacon(endpoint, new Blob([JSON.stringify(data)], { type: 'application/json' }));
     } catch {
       fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data), keepalive: true }).catch(() => {});
     }

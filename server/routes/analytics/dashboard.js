@@ -126,13 +126,13 @@ module.exports = async function handler(req, res) {
 
     if (type === 'journey') {
       const totalViews = await query(
-        `SELECT COUNT(*) AS count FROM page_views WHERE created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)`,
+        `SELECT COUNT(*) AS count FROM page_views WHERE view_start >= DATE_SUB(NOW(), INTERVAL ? DAY)`,
         [period]
       );
       const routeCounts = await query(
         `SELECT route_name, COUNT(*) AS count
          FROM page_views
-         WHERE created_at >= DATE_SUB(NOW(), INTERVAL ? DAY) AND route_name IS NOT NULL
+         WHERE view_start >= DATE_SUB(NOW(), INTERVAL ? DAY) AND route_name IS NOT NULL
          GROUP BY route_name ORDER BY count DESC`,
         [period]
       );
@@ -140,7 +140,7 @@ module.exports = async function handler(req, res) {
         `SELECT page_url, route_name, COUNT(*) AS views,
                 COUNT(DISTINCT visitor_id) AS unique_visitors
          FROM page_views
-         WHERE created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
+         WHERE view_start >= DATE_SUB(NOW(), INTERVAL ? DAY)
          GROUP BY page_url, route_name ORDER BY views DESC LIMIT 30`,
         [period]
       );
@@ -160,7 +160,7 @@ module.exports = async function handler(req, res) {
         let count;
         if (f.key === 'page_view') {
           const r = await query(
-            'SELECT COUNT(DISTINCT visitor_id) AS count FROM page_views WHERE created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)',
+            'SELECT COUNT(DISTINCT visitor_id) AS count FROM page_views WHERE view_start >= DATE_SUB(NOW(), INTERVAL ? DAY)',
             [period]
           );
           count = r[0]?.count || 0;
@@ -183,10 +183,11 @@ module.exports = async function handler(req, res) {
          WHERE is_active = TRUE AND session_start >= DATE_SUB(NOW(), INTERVAL 5 MINUTE)`
       );
       const visitors = await query(
-        `SELECT vs.session_id, vs.ip_address, pv.page_url, v.device_type, v.browser, v.country
+        `SELECT vs.session_id, vs.ip_address, pv.page_url, v.device_type, v.browser, vl.country
          FROM visitor_sessions vs
          LEFT JOIN visitors v ON vs.visitor_id = v.visitor_id
          LEFT JOIN page_views pv ON pv.session_id = vs.session_id
+         LEFT JOIN visitor_locations vl ON vl.visitor_id = v.visitor_id
          WHERE vs.is_active = TRUE AND vs.session_start >= DATE_SUB(NOW(), INTERVAL 5 MINUTE)
          GROUP BY vs.session_id ORDER BY vs.session_start DESC LIMIT 50`
       );

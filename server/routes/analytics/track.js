@@ -84,7 +84,11 @@ module.exports = async function handler(req, res) {
   const { type } = req.params;
   const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || '0.0.0.0';
   const ua = req.headers['user-agent'] || '';
-  const { anonymousId, ...body } = req.body || {};
+  let parsed = req.body;
+  if (typeof parsed === 'string') {
+    try { parsed = JSON.parse(parsed); } catch { parsed = {}; }
+  }
+  const { anonymousId, ...body } = parsed || {};
 
   try {
     if (type === 'page-view') {
