@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useSelector, useDispatch } from 'react-redux'
 import { clearCart, selectCartItems } from '../store/slices/cartSlice'
 import { useAnalytics } from '../analytics/useAnalytics';
+import { getStoredLocation, setStoredLocation, reverseGeocode } from '../components/LocationModal';
 
 function CheckoutForm() {
   const navigate = useNavigate();
@@ -26,6 +27,8 @@ function CheckoutForm() {
   const [success, setSuccess] = useState(null);
   const [locating, setLocating] = useState(false);
   const [coords, setCoords] = useState(null);
+  const [locationLabel, setLocationLabel] = useState('');
+  const [locationConfirmed, setLocationConfirmed] = useState(false);
 
   useEffect(() => {
     if (itemsParam) {
@@ -88,6 +91,21 @@ function CheckoutForm() {
     }
   }, [productSlug, itemsParam, initialQty, cartItems]);
 
+  useEffect(() => {
+    const stored = getStoredLocation();
+    if (stored) {
+      setCoords({ lat: stored.lat, lng: stored.lng });
+      if (stored.address) setLocationLabel(stored.address);
+      else (async () => {
+        const geo = await reverseGeocode(stored.lat, stored.lng);
+        if (geo) {
+          setLocationLabel(geo.displayName);
+          setStoredLocation(stored.lat, stored.lng, geo.displayName);
+        }
+      })();
+    }
+  }, []);
+
   const updateField = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -112,8 +130,22 @@ function CheckoutForm() {
     if (!navigator.geolocation) { setApiError("Geolocation is not supported by your browser"); return; }
     setLocating(true);
     setApiError("");
+    setLocationConfirmed(false);
+    setLocationLabel('');
     navigator.geolocation.getCurrentPosition(
-      (pos) => { setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setLocating(false); },
+      async (pos) => {
+        const { latitude: lat, longitude: lng } = pos.coords;
+        setCoords({ lat, lng });
+        const geo = await reverseGeocode(lat, lng);
+        if (geo) {
+          setLocationLabel(geo.displayName);
+          if (!form.city && geo.city) setForm((p) => ({ ...p, city: geo.city }));
+          if (!form.state && geo.state) setForm((p) => ({ ...p, state: geo.state }));
+        } else {
+          setLocationLabel(`${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+        }
+        setLocating(false);
+      },
       (err) => {
         setLocating(false);
         const msgs = {
@@ -147,7 +179,15 @@ function CheckoutForm() {
     setLoading(true);
     try {
       let fullAddress = form.landmark ? `${form.address.trim()}, ${form.landmark.trim()}` : form.address.trim();
-      if (coords) fullAddress += ` (https://maps.google.com/?q=${coords.lat},${coords.lng})`;
+      if (coords) {
+        if (locationConfirmed) {
+          fullAddress += `\n📍 ${locationLabel}`;
+          fullAddress += `\nhttps://maps.google.com/?q=${coords.lat},${coords.lng}`;
+        } else {
+          fullAddress += `\n📍 ${locationLabel} (unconfirmed)`;
+          fullAddress += `\nhttps://maps.google.com/?q=${coords.lat},${coords.lng}`;
+        }
+      }
 
       const payload = { ...form, address: fullAddress };
 
@@ -321,6 +361,44 @@ function CheckoutForm() {
                     )}
                   </button>
                 </div>
+
+                {coords && locationLabel && !locationConfirmed && (
+                  <div className="mb-5 bg-amber-50 border border-amber-200 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center shrink-0 mt-0.5">
+                        <i className="fas fa-map-pin text-amber-500 text-xs" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-semibold text-gray-700 mb-0.5">We detected your location</p>
+                        <p className="text-[0.65rem] text-gray-500 leading-relaxed">{locationLabel}</p>
+                        <a href={`https://maps.google.com/?q=${coords.lat},${coords.lng}`} target="_blank" rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-[0.6rem] text-blue-600 hover:underline mt-1 font-medium">
+                          <i className="fas fa-external-link-alt" /> View on Map
+                        </a>
+                        <div className="flex gap-2 mt-3">
+                          <button onClick={() => setLocationConfirmed(true)}
+                            className="px-3 py-1.5 bg-emerald-deep text-white rounded-lg text-[0.6rem] font-semibold hover:bg-teal-luxury transition">
+                            Yes, this is correct
+                          </button>
+                          <button onClick={getLocation}
+                            className="px-3 py-1.5 border border-gold-soft/30 rounded-lg text-[0.6rem] font-semibold hover:border-emerald-deep transition">
+                            Detect Again
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {locationConfirmed && (
+                  <div className="mb-5 bg-emerald-50 border border-emerald-200 rounded-xl p-3">
+                    <div className="flex items-center gap-2">
+                      <i className="fas fa-check-circle text-emerald-600 text-sm" />
+                      <span className="text-xs font-semibold text-emerald-700">Location confirmed</span>
+                      <span className="text-[0.55rem] text-emerald-600 ml-auto">{locationLabel}</span>
+                    </div>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="mb-4">

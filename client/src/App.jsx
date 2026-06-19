@@ -3,6 +3,7 @@ import { lazy, Suspense, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { checkAdminAuth } from './store/slices/adminAuthSlice';
 import { AnalyticsProvider } from './analytics/AnalyticsProvider';
+import LocationModal from './components/LocationModal';
 
 const LandingPage = lazy(() => import('./pages/LandingPage'));
 const ProductsPage = lazy(() => import('./pages/ProductsPage'));
@@ -60,6 +61,7 @@ function App() {
   return (
     <BrowserRouter>
       <AppInit />
+      <LocationModal />
       <JsonLd data={{
         '@context': 'https://schema.org',
         '@type': 'Organization',

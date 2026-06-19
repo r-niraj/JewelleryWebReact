@@ -79,7 +79,6 @@ export default function ProductEdit() {
         expectedRestockDate: form.expectedRestockDate || null,
         unavailableReason: form.unavailableReason || null,
       };
-      delete payload.slug;
       const url = isNew ? '/api/products' : `/api/products/${slug}`;
       const method = isNew ? 'POST' : 'PUT';
       const res = await fetch(url, {
@@ -92,6 +91,7 @@ export default function ProductEdit() {
       if (data.success) {
         setMsg(isNew ? 'Product created!' : 'Product updated!');
         if (isNew && data.product) navigate(`/admin/products/${data.product.slug}`);
+        else if (!isNew && data.product?.slug !== slug) navigate(`/admin/products/${data.product.slug}`, { replace: true });
       } else {
         setMsg(data.error || 'Save failed');
       }
@@ -188,8 +188,8 @@ export default function ProductEdit() {
               </div>
               <div>
                 <label className="block text-xs font-semibold text-heading mb-1">Slug *</label>
-                <input value={form.slug} onChange={(e) => update('slug', e.target.value)} disabled={!isNew}
-                  className={`w-full px-3 py-2.5 border-2 rounded-lg text-sm outline-none bg-ivory focus:bg-white focus:border-emerald-deep transition ${!isNew ? 'opacity-60 cursor-not-allowed' : ''}`} />
+                <input value={form.slug} onChange={(e) => update('slug', e.target.value)}
+                  className="w-full px-3 py-2.5 border-2 border-gold-soft/30 rounded-lg text-sm outline-none bg-ivory focus:bg-white focus:border-emerald-deep transition" />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-heading mb-1">SKU</label>
