@@ -11,8 +11,8 @@ module.exports = async function handler(req, res) {
     });
 
     const items = orders.map((o) => ({
-      name: o.customer.fullName,
-      city: o.customer.city || 'India',
+      name: o.deliveryFullName || o.customer?.fullName || 'Guest',
+      city: o.customer?.city || o.deliveryCity || 'India',
       amount: Number(o.totalAmount),
     }));
 

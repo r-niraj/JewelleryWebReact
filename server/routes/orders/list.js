@@ -12,15 +12,15 @@ module.exports = async function handler(req, res) {
     const params = [];
     if (status && status !== 'all') { where.push('o.status = ?'); params.push(status); }
     if (search) {
-      where.push('(o.order_number LIKE ? OR c.full_name LIKE ? OR c.phone LIKE ?)');
-      params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+      where.push('(o.order_number LIKE ? OR c.full_name LIKE ? OR o.delivery_full_name LIKE ? OR c.phone LIKE ?)');
+      params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
     }
 
     const whereSql = where.length ? 'WHERE ' + where.join(' AND ') : '';
 
     const [orders, countResult] = await Promise.all([
       db.query(
-        `SELECT o.*, c.full_name AS customer_name, c.phone AS customer_phone, c.address AS customer_address, c.city AS customer_city, c.state AS customer_state, c.pincode AS customer_pincode
+        `SELECT o.*, COALESCE(o.delivery_full_name, c.full_name) AS customer_name, c.phone AS customer_phone, COALESCE(o.delivery_address, c.address) AS customer_address, COALESCE(o.delivery_city, c.city) AS customer_city, COALESCE(o.delivery_state, c.state) AS customer_state, COALESCE(o.delivery_pincode, c.pincode) AS customer_pincode
          FROM orders o LEFT JOIN customers c ON o.customer_id = c.customer_id ${whereSql}
          ORDER BY o.created_at DESC LIMIT ? OFFSET ?`,
         [...params, limit, offset]

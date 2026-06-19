@@ -81,7 +81,7 @@ module.exports = async function handler(req, res) {
     }
 
     const orders = await prisma.order.findMany({
-      where: { customerId: { in: customers.map((c) => c.customerId) }, customer: { phone } },
+      where: { customerId: { in: customers.map((c) => c.customerId) } },
       include: {
         customer: { select: { fullName: true, phone: true } },
         statusHistory: { orderBy: { changedAt: 'asc' } },
@@ -117,7 +117,7 @@ module.exports = async function handler(req, res) {
       };
     });
 
-    return res.json({ success: true, orders: result, single: false });
+    return res.json({ success: true, orders: result, single: result.length === 1 });
   } catch (error) {
     console.error('Order track error:', error);
     return res.status(500).json({ success: false, error: 'Failed to fetch orders' });

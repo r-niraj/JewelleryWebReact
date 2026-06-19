@@ -4,7 +4,7 @@ const fs = require('fs/promises');
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'video/mp4'];
 const MAX_SIZE = 50 * 1024 * 1024;
-const UPLOAD_BASE = path.join(__dirname, '..', 'public', 'uploads', 'hero');
+const UPLOAD_BASE = path.join(__dirname, '..', '..', 'public', 'uploads', 'hero');
 
 module.exports = async function handler(req, res) {
   if (req.method === 'GET') return getHandler(req, res);

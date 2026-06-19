@@ -163,6 +163,7 @@ module.exports = async function handler(req, res) {
     }
 
     if (type === 'product-interaction') {
+      if (!body.product_id) return res.json({ queued: true, skipped: true });
       const visitorId = await getOrCreateVisitor(anonymousId, ip, ua);
       const sessionId = await getOrCreateSession(visitorId, ip, ua);
       enqueue('product_interactions', {

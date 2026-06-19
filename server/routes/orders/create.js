@@ -17,12 +17,7 @@ module.exports = async function handler(req, res) {
 
     const result = await prisma.$transaction(async (tx) => {
       let customer = await tx.customer.findFirst({ where: { phone } });
-      if (customer) {
-        customer = await tx.customer.update({
-          where: { customerId: customer.customerId },
-          data: { fullName: fullName.trim(), address: address.trim(), city: city.trim(), state: state?.trim(), pincode: pincode.trim(), email: email?.trim() || null },
-        });
-      } else {
+      if (!customer) {
         customer = await tx.customer.create({
           data: { fullName: fullName.trim(), phone, address: address.trim(), city: city.trim(), state: state?.trim(), pincode: pincode.trim(), email: email?.trim() || null },
         });
@@ -68,6 +63,7 @@ module.exports = async function handler(req, res) {
           data: {
             orderNumber,
             customerId: customer.customerId,
+            deliveryFullName: fullName.trim(),
             productName: orderProductName,
             quantity: orderQty,
             unitPrice: orderUnitPrice,
@@ -75,6 +71,10 @@ module.exports = async function handler(req, res) {
             paymentMethod: 'COD',
             status: 'Pending',
             notes: notes?.trim() || null,
+            deliveryAddress: address.trim(),
+            deliveryCity: city.trim(),
+            deliveryState: state?.trim() || null,
+            deliveryPincode: pincode.trim(),
           },
         });
 
@@ -115,6 +115,7 @@ module.exports = async function handler(req, res) {
           data: {
             orderNumber,
             customerId: customer.customerId,
+            deliveryFullName: fullName.trim(),
             productId: resolvedProduct?.id || null,
             productName,
             quantity: qty,
@@ -123,6 +124,10 @@ module.exports = async function handler(req, res) {
             paymentMethod: 'COD',
             status: 'Pending',
             notes: notes?.trim() || null,
+            deliveryAddress: address.trim(),
+            deliveryCity: city.trim(),
+            deliveryState: state?.trim() || null,
+            deliveryPincode: pincode.trim(),
           },
         });
 

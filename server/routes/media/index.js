@@ -4,7 +4,7 @@ const fs = require('fs/promises');
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_SIZE = 5 * 1024 * 1024;
-const UPLOAD_BASE = path.join(__dirname, '..', 'public', 'uploads');
+const UPLOAD_BASE = path.join(__dirname, '..', '..', 'public', 'uploads');
 
 function sanitizeName(name) {
   return name.replace(/[^a-zA-Z0-9._-]/g, '_').toLowerCase();

@@ -20,7 +20,7 @@ module.exports = async function handler(req, res) {
       const [bounce] = await query('SELECT COUNT(*) AS count FROM visitor_sessions WHERE session_end IS NULL AND created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)', [period]);
       const [avgDur] = await query('SELECT AVG(TIMESTAMPDIFF(SECOND, session_start, COALESCE(session_end, NOW()))) AS avg_sec FROM visitor_sessions WHERE created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)', [period]);
       const daily = await query(
-        `SELECT DATE(created_at) AS date, COUNT(*) AS count FROM visitor_sessions
+        `SELECT DATE_FORMAT(created_at, '%Y-%m-%d') AS date, COUNT(*) AS count FROM visitor_sessions
          WHERE created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
          GROUP BY DATE(created_at) ORDER BY date ASC`,
         [period]

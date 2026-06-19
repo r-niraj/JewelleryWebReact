@@ -39,6 +39,7 @@ app.delete('/api/products/:slug/videos', authMiddleware, require('./routes/produ
 app.post('/api/orders/create', require('./routes/orders/create'));
 app.get('/api/orders/list', authMiddleware, require('./routes/orders/list'));
 app.put('/api/orders/status', authMiddleware, require('./routes/orders/status'));
+app.post('/api/orders/delete', authMiddleware, require('./routes/orders/delete'));
 app.get('/api/orders/track', require('./routes/orders/track'));
 
 // Customers

@@ -72,7 +72,7 @@ async function putHandler(req, res) {
     }
 
     const product = await prisma.product.update({
-      where: { slug },
+      where: { id: existing.id },
       data: {
         ...(body.name !== undefined && { name: body.name }),
         ...(body.shortDescription !== undefined && { shortDescription: body.shortDescription }),
@@ -91,11 +91,15 @@ async function putHandler(req, res) {
         ...(body.status !== undefined && { status: body.status, availabilityUpdatedAt: new Date() }),
         ...(body.expectedRestockDate !== undefined && { expectedRestockDate: body.expectedRestockDate }),
         ...(body.unavailableReason !== undefined && { unavailableReason: body.unavailableReason }),
+        ...(body.slug !== undefined && { slug: body.slug }),
       },
     });
 
     return res.json({ success: true, product: { ...product, price: Number(product.price), originalPrice: Number(product.originalPrice) } });
   } catch (error) {
+    if (error?.code === 'P2002') {
+      return res.status(409).json({ success: false, error: 'A product with this slug already exists' });
+    }
     console.error('Product PUT error:', error);
     return res.status(500).json({ success: false, error: 'Failed to update product' });
   }
