@@ -48,26 +48,37 @@ export async function reverseGeocode(lat, lng) {
   } catch { return null; }
 }
 
-export default function LocationModal() {
+export default function LocationModal({ onCheckoutPage, onLocationReady } = {}) {
   const [visible, setVisible] = useState(false);
+  const [locating, setLocating] = useState(false);
 
   useEffect(() => {
-    const stored = getStoredLocation();
-    if (stored) return;
-    const timer = setTimeout(() => setVisible(true), 2000);
-    return () => clearTimeout(timer);
-  }, []);
+    if (!onCheckoutPage) {
+      const stored = getStoredLocation();
+      if (stored) return;
+      const timer = setTimeout(() => setVisible(true), 2000);
+      return () => clearTimeout(timer);
+    } else {
+      const stored = getStoredLocation();
+      if (stored) return;
+      setVisible(true);
+    }
+  }, [onCheckoutPage]);
 
   const handleAllow = () => {
     if (!navigator.geolocation) { setVisible(false); return; }
+    setLocating(true);
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const { latitude: lat, longitude: lng } = pos.coords;
         const geo = await reverseGeocode(lat, lng);
-        setStoredLocation(lat, lng, geo?.displayName || '');
+        const displayName = geo?.displayName || '';
+        setStoredLocation(lat, lng, displayName);
+        if (onLocationReady) onLocationReady({ lat, lng, geo });
+        setLocating(false);
         setVisible(false);
       },
-      () => setVisible(false),
+      () => { setLocating(false); setVisible(false); },
       { enableHighAccuracy: true, timeout: 10000 },
     );
   };
@@ -83,14 +94,28 @@ export default function LocationModal() {
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-5 bg-black/40 backdrop-blur-sm">
       <div className="bg-white rounded-2xl p-7 max-w-sm w-full shadow-2xl text-center">
         <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-emerald-100 flex items-center justify-center">
-          <i className="fas fa-map-pin text-emerald-deep text-xl" />
+          {locating ? (
+            <div className="w-6 h-6 border-2 border-emerald-deep/20 border-t-emerald-deep rounded-full animate-spin" />
+          ) : (
+            <i className="fas fa-map-pin text-emerald-deep text-xl" />
+          )}
         </div>
-        <h3 className="font-serif text-lg font-semibold text-heading mb-2">We detected your location</h3>
-        <p className="text-xs text-muted mb-6">Allow location access to auto-fill your delivery address and help us serve you faster.</p>
+        <h3 className="font-serif text-lg font-semibold text-heading mb-2">
+          {locating ? 'Detecting your location…' : 'We detected your location'}
+        </h3>
+        <p className="text-xs text-muted mb-6">
+          {locating
+            ? 'Please wait while we pinpoint your address for faster delivery.'
+            : 'Allow location access to auto-fill your delivery address and help us serve you faster.'}
+        </p>
         <div className="flex gap-3 justify-center">
-          <button onClick={handleSkip} className="px-5 py-2 border border-gold-soft/30 rounded-lg text-xs font-semibold hover:border-emerald-deep transition">Skip</button>
-          <button onClick={handleAllow} className="px-5 py-2 bg-emerald-deep text-white rounded-lg text-xs font-semibold hover:bg-teal-luxury transition">
-            <i className="fas fa-crosshairs mr-1" /> Allow Location
+          <button onClick={handleSkip} disabled={locating} className="px-5 py-2 border border-gold-soft/30 rounded-lg text-xs font-semibold hover:border-emerald-deep transition disabled:opacity-40">Skip</button>
+          <button onClick={handleAllow} disabled={locating} className="px-5 py-2 bg-emerald-deep text-white rounded-lg text-xs font-semibold hover:bg-teal-luxury transition disabled:opacity-60">
+            {locating ? (
+              <><span className="inline-block w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin mr-1" /> Loading…</>
+            ) : (
+              <><i className="fas fa-crosshairs mr-1" /> Allow Location</>
+            )}
           </button>
         </div>
       </div>

@@ -45,13 +45,11 @@ export default function LandingPage() {
   const [viewerCount, setViewerCount] = useState(18);
   const [activeFaq, setActiveFaq] = useState(null);
   const [sticky, setSticky] = useState(false);
-  const [showExit, setShowExit] = useState(false);
   const [recentOrders, setRecentOrders] = useState([]);
   const [orderIdx, setOrderIdx] = useState(0);
   const [offerEnd, setOfferEnd] = useState(null);
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [offerTitle, setOfferTitle] = useState("Limited Time Offer");
-  const exitDismissed = useRef(false);
   const [whatsAppNumber, setWhatsAppNumber] = useState("919999999999");
   const [stockCount, setStockCount] = useState(null);
   const [deliveryDelhi, setDeliveryDelhi] = useState("1-3 Days");
@@ -108,12 +106,9 @@ export default function LandingPage() {
     }, 4500);
     const handleScroll = () => setSticky(window.scrollY > window.innerHeight * 0.7);
     window.addEventListener("scroll", handleScroll, { passive: true });
-    const handleExit = (e) => { if (!exitDismissed.current && e.clientY <= 0) setShowExit(true); };
-    document.addEventListener("mouseleave", handleExit);
     return () => {
       clearInterval(interval);
       window.removeEventListener("scroll", handleScroll);
-      document.removeEventListener("mouseleave", handleExit);
     };
   }, []);
 
@@ -1315,25 +1310,7 @@ export default function LandingPage() {
         <i className="fab fa-whatsapp" />
       </a>
 
-      {showExit && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-5" onClick={() => { setShowExit(false); exitDismissed.current = true; }}>
-          <div className="absolute inset-0 bg-emerald-deep/60 backdrop-blur-sm" />
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="relative bg-white rounded-[16px] p-9 max-w-[400px] w-full text-center shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button onClick={() => { setShowExit(false); exitDismissed.current = true; }} className="absolute top-2.5 right-3.5 bg-none border-none text-2xl text-gray-400 cursor-pointer hover:text-heading transition">&times;</button>
-            <div className="text-3xl mb-2.5">💎</div>
-            <h3 className="font-serif text-xl font-semibold text-heading mb-1.5">Wait! Don't Miss This Offer</h3>
-            <p className="text-sm text-body font-light mb-4">Get the {featuredProduct?.name || (hero?.title || "Premium Crystal Necklace").replace(/<br\s*\/?>/gi, ' ')} at <strong className="text-heading">{heroDiscountPercent}% OFF</strong> with free shipping, COD, and a premium gift box.</p>
-            <div className="font-serif text-3xl text-emerald-deep font-bold mb-4">₹{heroPrice.toLocaleString()}</div>
-            <button onClick={() => { handleOrderNow(); setShowExit(false); exitDismissed.current = true; }} className="bg-emerald-deep text-white font-bold text-sm py-4 px-8 rounded-[14px] uppercase tracking-wider shadow-[0_4px_14px_rgba(11,58,66,0.2)] hover:bg-teal-luxury transition-all block w-full cursor-pointer">{noFeatured ? "SHOP NOW" : "CLAIM YOUR DISCOUNT"}</button>
-            <p className="mt-2.5 text-[0.7rem] text-muted">Free Shipping • COD Available • Gift Box Included</p>
-          </motion.div>
-        </div>
-      )}
+      {/* EXIT-INTENT CLAIM OFFER POPUP REMOVED — causing user disruption */}
     </main>
   );
 }

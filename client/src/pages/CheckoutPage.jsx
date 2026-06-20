@@ -5,6 +5,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import { clearCart, selectCartItems } from '../store/slices/cartSlice'
 import { useAnalytics } from '../analytics/useAnalytics';
 import { getStoredLocation, setStoredLocation, reverseGeocode } from '../components/LocationModal';
+import LocationModal from '../components/LocationModal';
 
 function CheckoutForm() {
   const navigate = useNavigate();
@@ -105,6 +106,15 @@ function CheckoutForm() {
       })();
     }
   }, []);
+
+  const handleLocationReady = ({ lat, lng, geo }) => {
+    setCoords({ lat, lng });
+    if (geo) {
+      setLocationLabel(geo.displayName);
+      if (!form.city && geo.city) setForm((p) => ({ ...p, city: geo.city }));
+      if (!form.state && geo.state) setForm((p) => ({ ...p, state: geo.state }));
+    }
+  };
 
   const updateField = (e) => {
     const { name, value } = e.target;
@@ -434,8 +444,9 @@ function CheckoutForm() {
               </form>
             </div>
           </div>
-        </div>
       </div>
+      <LocationModal onCheckoutPage onLocationReady={handleLocationReady} />
+    </div>
     </div>
   );
 }
